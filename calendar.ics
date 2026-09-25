@@ -215,51 +215,75 @@ SUMMARY:Pokémon TCG: 30th Celebration Ultra-Premium Collections (Wave 3)
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-me55@trackmaster
-DTSTART;VALUE=DATE:20260916
-SUMMARY:Pokémon TCG: 30th Celebration
+UID:tcg_releases-set-p-a@trackmaster
+DTSTART;VALUE=DATE:20241030
+SUMMARY:Pokémon TCG: Promos-A
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-me5@trackmaster
-DTSTART;VALUE=DATE:20260717
-SUMMARY:Pokémon TCG: Pitch Black
+UID:tcg_releases-set-a1@trackmaster
+DTSTART;VALUE=DATE:20241030
+SUMMARY:Pokémon TCG: Genetic Apex
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-me4@trackmaster
-DTSTART;VALUE=DATE:20260522
-SUMMARY:Pokémon TCG: Chaos Rising
+UID:tcg_releases-set-sv08@trackmaster
+DTSTART;VALUE=DATE:20241108
+SUMMARY:Pokémon TCG: Surging Sparks
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-me3@trackmaster
-DTSTART;VALUE=DATE:20260327
-SUMMARY:Pokémon TCG: Perfect Order
+UID:tcg_releases-set-2024sv@trackmaster
+DTSTART;VALUE=DATE:20241204
+SUMMARY:Pokémon TCG: McDonald's Collection 2024
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-me2@trackmaster
-DTSTART;VALUE=DATE:20251114
-SUMMARY:Pokémon TCG: Phantasmal Flames
+UID:tcg_releases-set-a1a@trackmaster
+DTSTART;VALUE=DATE:20241217
+SUMMARY:Pokémon TCG: Mythical Island
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-me1@trackmaster
-DTSTART;VALUE=DATE:20250926
-SUMMARY:Pokémon TCG: Mega Evolution
+UID:tcg_releases-set-sv08.5@trackmaster
+DTSTART;VALUE=DATE:20250117
+SUMMARY:Pokémon TCG: Prismatic Evolutions
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-rsv10pt5@trackmaster
-DTSTART;VALUE=DATE:20250718
-SUMMARY:Pokémon TCG: White Flare
+UID:tcg_releases-set-a2@trackmaster
+DTSTART;VALUE=DATE:20250130
+SUMMARY:Pokémon TCG: Space-Time Smackdown
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-zsv10pt5@trackmaster
-DTSTART;VALUE=DATE:20250718
-SUMMARY:Pokémon TCG: Black Bolt
+UID:tcg_releases-set-a2a@trackmaster
+DTSTART;VALUE=DATE:20250228
+SUMMARY:Pokémon TCG: Triumphant Light
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-a2b@trackmaster
+DTSTART;VALUE=DATE:20250327
+SUMMARY:Pokémon TCG: Shining Revelry
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-sv09@trackmaster
+DTSTART;VALUE=DATE:20250328
+SUMMARY:Pokémon TCG: Journey Together
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-a3@trackmaster
+DTSTART;VALUE=DATE:20250430
+SUMMARY:Pokémon TCG: Celestial Guardians
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-a3a@trackmaster
+DTSTART;VALUE=DATE:20250529
+SUMMARY:Pokémon TCG: Extradimensional Crisis
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
@@ -269,29 +293,105 @@ SUMMARY:Pokémon TCG: Destined Rivals
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-sv9@trackmaster
-DTSTART;VALUE=DATE:20250328
-SUMMARY:Pokémon TCG: Journey Together
+UID:tcg_releases-set-a3b@trackmaster
+DTSTART;VALUE=DATE:20250626
+SUMMARY:Pokémon TCG: Eevee Grove
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-sv8pt5@trackmaster
-DTSTART;VALUE=DATE:20250117
-SUMMARY:Pokémon TCG: Prismatic Evolutions
+UID:tcg_releases-set-sv10.5b@trackmaster
+DTSTART;VALUE=DATE:20250717
+SUMMARY:Pokémon TCG: Black Bolt
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-sv8@trackmaster
-DTSTART;VALUE=DATE:20241108
-SUMMARY:Pokémon TCG: Surging Sparks
+UID:tcg_releases-set-sv10.5w@trackmaster
+DTSTART;VALUE=DATE:20250717
+SUMMARY:Pokémon TCG: White Flare
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-a4@trackmaster
+DTSTART;VALUE=DATE:20250730
+SUMMARY:Pokémon TCG: Wisdom of Sea and Sky
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-a4a@trackmaster
+DTSTART;VALUE=DATE:20250828
+SUMMARY:Pokémon TCG: Secluded Springs
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-mee@trackmaster
+DTSTART;VALUE=DATE:20250925
+SUMMARY:Pokémon TCG: Mega Evolution Energy
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-me01@trackmaster
+DTSTART;VALUE=DATE:20250926
+SUMMARY:Pokémon TCG: Mega Evolution
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-mep@trackmaster
+DTSTART;VALUE=DATE:20250926
+SUMMARY:Pokémon TCG: MEP Black Star Promos
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-b1@trackmaster
+DTSTART;VALUE=DATE:20251030
+SUMMARY:Pokémon TCG: Mega Rising
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-me02@trackmaster
+DTSTART;VALUE=DATE:20251114
+SUMMARY:Pokémon TCG: Phantasmal Flames
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-b1a@trackmaster
+DTSTART;VALUE=DATE:20251217
+SUMMARY:Pokémon TCG: Crimson Blaze
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-b2@trackmaster
+DTSTART;VALUE=DATE:20260129
+SUMMARY:Pokémon TCG: Fantastical Parade
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-b2a@trackmaster
+DTSTART;VALUE=DATE:20260226
+SUMMARY:Pokémon TCG: Paldean Wonders
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-me03@trackmaster
+DTSTART;VALUE=DATE:20260327
+SUMMARY:Pokémon TCG: Perfect Order
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-me04@trackmaster
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Pokémon TCG: Chaos Rising
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:tcg_releases-set-me05@trackmaster
+DTSTART;VALUE=DATE:20260717
+SUMMARY:Pokémon TCG: Pitch Black
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:onepiece_releases-op18@trackmaster
 DTSTART;VALUE=DATE:20261120
-SUMMARY:One Piece: Limited Card Sleeve ONE PIECE Heroines Edition MSRP USD
-  $10.00 BOOSTERS BOOSTER PACK -THE DOMINANCE OF GOD- [OP-18] (date unconf
- irmed)
+SUMMARY:One Piece: OP-18 The Dominance of God (date unconfirmed)
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
