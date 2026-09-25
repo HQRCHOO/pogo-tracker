@@ -1,0 +1,30 @@
+name: daily-preorder-check
+on:
+  schedule:
+    - cron: "0 13 * * *"          # 6 AM PT on daylight time
+    - cron: "0 14 * * *"          # 6 AM PT on standard time (the script skips the wrong one)
+  workflow_dispatch: {}
+
+concurrency:
+  group: dashboard-write
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m poller.daily
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
+          GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          GDRIVE_FILE_ID: ${{ secrets.GDRIVE_FILE_ID }}
+          BESTBUY_KEY: ${{ secrets.BESTBUY_KEY }}
+          TARGET_REDSKY_KEY: ${{ secrets.TARGET_REDSKY_KEY }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
