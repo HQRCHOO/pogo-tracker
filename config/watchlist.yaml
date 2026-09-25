@@ -34,7 +34,7 @@ stock:
   - name: GO Plus+ (GameStop)
     item: Pokémon GO Plus +
     retailer: gamestop
-    url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/20037819.html
+    url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/451400.html   # SKU 451400 (same listing as …/20037819.html)
 
 target:
   redsky_url: ""                   # paste the current template from retail-drop-monitor; uses {tcin} {store_id} {zip} {key}
@@ -85,7 +85,21 @@ bestbuy:
     - {area: SGV,         zip: "91801", radius_miles: 6}   # Target #184 Alhambra
     - {area: SGV,         zip: "91770", radius_miles: 6}   # Target #1411 Rosemead
 
+trackers:                          # public tracker pages (secondhand status; no keys needed)
+  - item: Pokémon GO Plus +
+    hotstock: https://www.hotstock.io/us/p/pokemon-go-plus
+    trackalacker: https://www.trackalacker.com/products/showcase/pokemon-go-plus
+    match:                         # keep only rows whose retailer link contains this text
+      Best Buy: "6537404"
+      Target: "88714054"
+      Target (Delivery): "88714054"
+      Target (Pickup): "88714054"
+      Walmart: "1178570516"
+      GameStop: "pokemon-go-plus"
+      Amazon: "B0BX2P43PX"
+
 cadence_minutes:                   # estimates; tune after week one
+  trackers: 30
   stock: 15
   pogo_events: 30
   discord: 30

@@ -48,8 +48,9 @@ SOURCES = {
     "target": ("stock", "stock"),
     "gamestop": ("stock", "stock"),
     "discord": ("discord", "discord_posts"),
+    "trackers": ("trackers", "stock"),
 }
-STOCK_SOURCES = ("bestbuy", "target", "gamestop")
+STOCK_SOURCES = ("bestbuy", "target", "gamestop", "trackers")
 LINK_RULES = {"pogo_events": "https://leekduck.com/events/{id}/",
               "gundam_releases": "https://www.gundam-gcg.com/en/products/{id}.html"}
 
@@ -67,8 +68,15 @@ def due(state, group, cfg, force):
     return last is None or (now_utc() - last).total_seconds() >= (mins - 1) * 60
 
 
+def garbled(name):
+    """A scraped name that swallowed other text (a price, or far too long)."""
+    n = str(name or "")
+    return "MSRP" in n.upper() or len(n) > 100
+
+
 def merge_manual(scraped, manual):
-    """Scraped rows win on dates/prices; manual rows fill gaps and add unlisted sets."""
+    """Scraped rows win on dates/prices; manual rows fill gaps and add unlisted sets.
+    A garbled scraped name is replaced by the manual name when one exists."""
     by_id = {r["id"]: dict(r) for r in scraped if r.get("id")}
     for m in manual or []:
         m = dict(m)
@@ -77,6 +85,10 @@ def merge_manual(scraped, manual):
             m["release_date"] = str(m.pop("date"))
         if m.get("release_date") is not None:
             m["release_date"] = str(m["release_date"])
+        if m["id"] in by_id and garbled(by_id[m["id"]].get("name")) and m.get("name"):
+            by_id[m["id"]]["name"] = m["name"]
+            if m.get("category"):
+                by_id[m["id"]]["category"] = m["category"]
         if m["id"] in by_id:
             got, want = str(by_id[m["id"]].get("release_date") or ""), str(m.get("release_date") or "")
             if len(got) == 7 and len(want) == 10 and want.startswith(got):
@@ -127,8 +139,11 @@ def run(only=None, force=False, dry=False, out=print):
             res = importlib.import_module(f"poller.sources.{name}").fetch(cfg, prev)
         except Exception as e:  # one broken source never stops the others
             res = result(ok=False, error=f"{type(e).__name__}: {str(e)[:160]}")
-        if res["ok"] and name in ("onepiece", "dragonball") and not res["items"]:
-            res = result(ok=False, error="page layout changed: 0 products matched")
+        if res["ok"] and name in ("onepiece", "dragonball"):
+            man_ids = {str(x.get("id")) for x in ((cfg.get("card_games") or {}).get(name) or {}).get("manual") or []}
+            res["items"] = [r for r in res["items"] if not garbled(r.get("name")) or r.get("id") in man_ids]
+            if not res["items"]:
+                res = result(ok=False, error="page layout changed: 0 products matched", debug=res.get("debug"))
         results[name] = res
         st["last_run"] = now_iso()
         if res["ok"]:
@@ -137,6 +152,10 @@ def run(only=None, force=False, dry=False, out=print):
             st.update(ok=None, fails=0, error=res["error"], count=0)
         else:
             st.update(ok=False, fails=int(st.get("fails", 0)) + 1, error=res["error"])
+        if res.get("debug"):
+            st["debug_snippet"] = str(res["debug"])[:1500]
+        elif res["ok"]:
+            st.pop("debug_snippet", None)
         flag = {True: "ok  ", None: "skip", False: "FAIL"}[res["ok"]]
         out(f"{name:<14} {flag} {res.get('count', 0):>3} items   {res.get('error') or ''}".rstrip())
 
@@ -182,9 +201,26 @@ def run(only=None, force=False, dry=False, out=print):
             if res["ok"]:
                 fresh += [dict(r, src=s, checked_at=now_iso()) for r in res["items"]]
             elif res["ok"] is False:  # keep last known rows for a failing retailer
-                fresh += [r for r in prev.get("stock", []) if r.get("src") == s
-                          or (not r.get("src") and r.get("retailer") == RETAILER.get(s))]
-        new["stock"] = keep + fresh + placeholders(cfg, results)
+                kept = [dict(r) for r in prev.get("stock", []) if r.get("src") == s
+                        or (not r.get("src") and r.get("retailer") == RETAILER.get(s))]
+                # a URL changed in the watchlist still reaches the kept row
+                urls = [w.get("url") for w in cfg.get("stock", []) if w.get("retailer") == s and w.get("url")]
+                if len(urls) == 1:
+                    for r in kept:
+                        if r.get("url") and r.get("url") != urls[0]:
+                            r["url"] = urls[0]
+                fresh += kept
+        stock = keep + fresh + placeholders(cfg, results)
+        # a live tracker row replaces the "not set up" row for the same retailer and item
+        have = {(r.get("item"), (r.get("retailer") or "").split(" (")[0]) for r in stock if r.get("status") != "not_configured"}
+        stock = [r for r in stock if r.get("status") != "not_configured"
+                 or (r.get("item"), r.get("retailer")) not in have]
+        # a first-hand check that worked this run beats the tracker's secondhand row
+        firsthand = {(r.get("item"), r.get("retailer")) for r in stock
+                     if r.get("src") in ("bestbuy", "target", "gamestop") and (results.get(r.get("src")) or {}).get("ok")
+                     and r.get("status") != "not_configured"}
+        new["stock"] = [r for r in stock if r.get("src") != "trackers"
+                        or (r.get("item"), (r.get("retailer") or "").split(" (")[0]) not in firsthand]
 
     new.update(schema=2, generated_at=now_iso(), generated_by="poller",
                location=cfg.get("location") or new.get("location"), link_rules=LINK_RULES)
@@ -199,7 +235,18 @@ def run(only=None, force=False, dry=False, out=print):
         if was is not None and was != r.get("status") and r.get("status") != "not_configured":
             flips.append({"at": now_iso(), "item": r.get("item"), "retailer": r.get("retailer"), "store": r.get("store"),
                           "area": r.get("area"), "from": was, "to": r.get("status"), "price": r.get("price"), "url": r.get("url")})
-    new["stock_log"] = (flips + list(prev.get("stock_log") or []))[:500]
+    # tracker history (TrackaLacker "Recent Changes") joins the log with its own timestamps
+    tr = results.get("trackers")
+    if tr and tr.get("ok") and tr.get("history"):
+        known = {(f.get("at"), f.get("retailer"), f.get("to")) for f in (prev.get("stock_log") or []) + flips}
+        for h in tr["history"]:
+            key = (h["at"], h["retailer"], h["status"])
+            if key not in known:
+                known.add(key)
+                flips.append({"at": h["at"], "item": h.get("item"), "retailer": h["retailer"], "store": None, "area": None,
+                              "from": None, "to": h["status"], "price": h.get("price"), "url": h.get("url"),
+                              "source": h.get("source"), "tracker_url": h.get("tracker_url")})
+    new["stock_log"] = sorted(flips + list(prev.get("stock_log") or []), key=lambda f: f.get("at") or "", reverse=True)[:500]
     lines, new["alerted"] = diff.compute(prev, new, cfg)
     new["alerts_log"] = ([{"at": now_iso(), "line": ln} for ln in lines] + list(prev.get("alerts_log") or []))[:30]
     out(f"diff: {len(lines)} alert line(s)")

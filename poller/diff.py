@@ -27,7 +27,8 @@ def compute(prev, new, cfg):
             if s.get("store"):
                 where += f" ({s['store']}, {s.get('area') or ''})".replace(", )", ")")
             price = f" ${s['price']:.2f}" if isinstance(s.get("price"), (int, float)) else ""
-            urgent.append(f"🟢 {LIVE[s['status']]}: {s.get('item')} at {where}{price} {s.get('url') or ''}".strip())
+            via = f" (reported by {s['via']}; verify on the retailer page)" if s.get("via") else ""
+            urgent.append(f"🟢 {LIVE[s['status']]}: {s.get('item')} at {where}{price}{via} {s.get('url') or ''}".strip())
 
     # 2. Pokémon GO events.
     now = now_pt()
