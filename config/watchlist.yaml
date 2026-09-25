@@ -1,0 +1,93 @@
+# TrackMaster watchlist: the only file you edit day to day.
+# Values in <angle brackets> are placeholders. Keys and tokens never go here;
+# they are GitHub secrets (guide §1).
+
+dashboard_url: https://claude.ai/artifact/V815VkYyqmhDTXXipuvqkV
+github_user: "<your GitHub username>"   # builds the phone-calendar link to calendar.ics in this repo
+
+location:
+  home:                     # all distances and "nearby" are measured from here
+    name: Target #912 Chino Hills Grand Avenue
+    address: 3944 Grand Ave, Chino, CA 91710
+    lat: 34.0016935
+    lng: -117.7187131
+  radius_miles: 10          # per ZIP; estimate, tune after week one
+  areas:
+    - {name: SGV,          zip: "91776"}
+    - {name: Chino,        zip: "91710"}
+    - {name: Chino Hills,  zip: "91709"}
+    - {name: Diamond Bar,  zip: "91765"}
+
+pogo:
+  event_types: [season, event, community-day, research, go-pass, pokemon-go-tour, raid-day, wild-area, max-battles, elite-raids, raid-weekend, go-rocket-takeover]
+  ending_soon_hours: 48
+
+stock:
+  - name: GO Plus+ (Best Buy)
+    item: Pokémon GO Plus +
+    retailer: bestbuy
+    sku: "6537404"                 # Pokémon GO Plus + (model PMCAWNSAA)
+  - name: GO Plus+ (Target)
+    item: Pokémon GO Plus +
+    retailer: target
+    tcin: "88714054"               # target.com/p/pokemon-go-plus/-/A-88714054
+  - name: GO Plus+ (GameStop)
+    item: Pokémon GO Plus +
+    retailer: gamestop
+    url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/20037819.html
+
+target:
+  redsky_url: ""                   # paste the current template from retail-drop-monitor; uses {tcin} {store_id} {zip} {key}
+  stores:                          # one Target store per area (IDs from target.com/sl/<city>/<id>)
+    - {area: SGV,         store_id: "184",  name: "Alhambra"}
+    - {area: SGV,         store_id: "1411", name: "Rosemead"}           # store number from 3 listings; confirm
+    - {area: Chino,       store_id: "912",  name: "Chino Hills Grand Avenue"}
+    - {area: Chino Hills, store_id: "912",  name: "Chino Hills Grand Avenue"}
+    - {area: Diamond Bar, store_id: "2179", name: "Diamond Bar"}
+
+card_games:
+  alert_days_before: 7
+  pokemon:                         # merged with pokemontcg.io / TCGdex set data (poller source pokemonsets)
+    - {id: delta-reign, name: "Mega Evolution: Delta Reign", date: "2026-11-06"}
+    - {id: ascended-heroes, name: "Mega Evolution: Ascended Heroes", date: "2026-01-30"}     # released; tracked for restocks
+    - {id: 30th-celebration, name: "30th Celebration (Wave 1)", date: "2026-09-16"}
+    - {id: 30th-celebration-wave-2, name: "30th Celebration (Wave 2)", date: "2026-10-02", confirmed: false, category: other}
+    - {id: 30th-celebration-upc, name: "30th Celebration Ultra-Premium Collections (Wave 3)", date: "2026-11-06", confirmed: false, category: other}
+  onepiece:
+    manual:                        # used when the official page can't be read; also adds unlisted sets
+      - {id: eb05, name: "Extra Booster Heroines Edition vol.2 [EB-05]", category: BOOSTER PACK, release_date: "2026-10-30", msrp: "$4.99"}
+      - {id: op18, name: "OP-18 The Dominance of God", category: BOOSTER PACK, release_date: "2026-11-20", confirmed: false, note: "Date from retailers; Bandai hasn't posted it yet"}
+      - {id: st37-st38, name: "Starter Decks ST-37 / ST-38", category: DECKS, release_date: "2026-12", confirmed: false}
+  dragonball:
+    manual:
+      - {id: fb11, format: Fusion World, name: "Brightness of Hope [FB11]", category: BOOSTER PACK, release_date: "2026-10-16", msrp: "$4.99"}
+      - {id: fb12, format: Fusion World, name: "Reach the God [FB12]", category: BOOSTER PACK, release_date: null, note: "Japan Dec 12, 2026; English date not announced"}
+      - {id: dbs-b31, format: Masters, name: "Ultra-Bout Series 04 Impact Beyond Dimensions [DBS-B31]", category: BOOSTER PACK, release_date: "2026-07-03", msrp: "$5.99"}
+  gundam:
+    source: gcg-api
+
+discord_feeds:                     # channels in YOUR server (guide §11); leave the ids as-is until set up
+  - {name: iPogo announcements, channel_id: "<channel id>", tab: ipogo}
+  - {name: Restock group, channel_id: "<channel id>", tab: stock, keywords: [preorder, restock, live, "GO Plus"]}
+
+calendar:                          # calendar.ics in this repo; subscribe once from your phone
+  event_types: [season, event, community-day, raid-day, research, go-pass, pokemon-go-tour, wild-area, max-battles, elite-raids, raid-weekend, go-rocket-takeover]
+  card_releases: true
+
+digest:
+  hour_pt: 7
+  stale_hours: 6
+
+bestbuy:
+  zips:                            # Best Buy store checks run around each Target (6 mi); replaces area ZIPs
+    - {area: Chino,       zip: "91710", radius_miles: 6}   # home Target #912
+    - {area: Diamond Bar, zip: "91765", radius_miles: 6}   # Target #2179
+    - {area: SGV,         zip: "91801", radius_miles: 6}   # Target #184 Alhambra
+    - {area: SGV,         zip: "91770", radius_miles: 6}   # Target #1411 Rosemead
+
+cadence_minutes:                   # estimates; tune after week one
+  stock: 15
+  pogo_events: 30
+  discord: 30
+  raids: 240
+  card_games: 1440
