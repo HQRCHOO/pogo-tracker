@@ -1,0 +1,57 @@
+name: poll
+on:
+  schedule:
+    - cron: "*/15 * * * *"        # UTC; each source runs on its own cadence from watchlist.yaml
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run every source now"
+        type: boolean
+        default: true
+      test_alert:
+        description: "Only send one Discord test message"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write                 # lets the run commit calendar.ics when it changes
+
+concurrency:
+  group: dashboard-write          # shared with daily.yml so two runs never overwrite each other
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - if: ${{ github.event_name == 'workflow_dispatch' && inputs.test_alert }}
+        run: python -m poller.main --test-alert
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      - if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test_alert) }}
+        run: python -m poller.main
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force }}
+          GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          GDRIVE_FILE_ID: ${{ secrets.GDRIVE_FILE_ID }}
+          BESTBUY_KEY: ${{ secrets.BESTBUY_KEY }}
+          TARGET_REDSKY_KEY: ${{ secrets.TARGET_REDSKY_KEY }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          POKEMONTCG_KEY: ${{ secrets.POKEMONTCG_KEY }}
+      - name: Commit calendar.ics if it changed
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test_alert) }}
+        run: |
+          if [ -f calendar.ics ]; then
+            git config user.name "trackmaster-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add calendar.ics
+            git diff --cached --quiet || (git commit -m "calendar update" && git pull --rebase --quiet && git push)
+          fi
