@@ -3,7 +3,7 @@
 # they are GitHub secrets (guide §1).
 
 dashboard_url: https://claude.ai/artifact/V815VkYyqmhDTXXipuvqkV
-github_user: "<your GitHub username>"   # builds the phone-calendar link to calendar.ics in this repo
+github_user: HQRCHOO
 
 location:
   home:                     # all distances and "nearby" are measured from here
