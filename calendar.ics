@@ -5,14 +5,6 @@ CALSCALE:GREGORIAN
 X-WR-CALNAME:TrackMaster
 X-WR-CALDESC:Pokémon GO events and card releases
 BEGIN:VEVENT
-UID:pogo-catch-mastery-phantump-2026@trackmaster
-DTSTART:20260926T100000
-DTEND:20260926T200000
-SUMMARY:Phantump Catch Mastery
-DESCRIPTION:https://leekduck.com/events/catch-mastery-phantump-2026/
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
 UID:pogo-lego-pokemon-go-2026@trackmaster
 DTSTART:20260803T100000
 DTEND:20260930T235900
@@ -91,6 +83,14 @@ DTSTART:20261013T100000
 DTEND:20261019T200000
 SUMMARY:Fall Marathon: Buddy Trek
 DESCRIPTION:https://leekduck.com/events/fall-marathon-buddy-trek-2026/
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:pogo-pokemon-tcg-30th-celebration@trackmaster
+DTSTART:20260927T100000
+DTEND:20261020T220000
+SUMMARY:Pokémon TCG: 30th Celebration
+DESCRIPTION:https://leekduck.com/events/pokemon-tcg-30th-celebration/
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
