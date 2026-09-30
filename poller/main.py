@@ -14,7 +14,7 @@ import sys
 
 import yaml
 
-from . import alerts, calendar, diff, drive
+from . import alerts, diff, drive, ics  # ics.py writes calendar.ics (not named calendar.py, so it can never shadow Python's built-in calendar module)
 from .util import now_iso, now_utc, parse_iso, result
 
 HEARTBEAT_HOURS = 2  # rewrite dashboard.json at least this often even if nothing changed
@@ -49,8 +49,9 @@ SOURCES = {
     "gamestop": ("stock", "stock"),
     "discord": ("discord", "discord_posts"),
     "trackers": ("trackers", "stock"),
+    "nintendo": ("nintendo", "stock"),
 }
-STOCK_SOURCES = ("bestbuy", "target", "gamestop", "trackers")
+STOCK_SOURCES = ("bestbuy", "target", "gamestop", "trackers", "nintendo")
 LINK_RULES = {"pogo_events": "https://leekduck.com/events/{id}/",
               "gundam_releases": "https://www.gundam-gcg.com/en/products/{id}.html"}
 
@@ -102,7 +103,7 @@ def merge_manual(scraped, manual):
     return list(by_id.values())
 
 
-RETAILER = {"bestbuy": "Best Buy", "target": "Target", "gamestop": "GameStop"}
+RETAILER = {"bestbuy": "Best Buy", "target": "Target", "gamestop": "GameStop", "nintendo": "Nintendo Store"}
 
 
 def placeholders(cfg, results):
@@ -152,6 +153,17 @@ def run(only=None, force=False, dry=False, out=print):
             st.update(ok=None, fails=0, error=res["error"], count=0)
         else:
             st.update(ok=False, fails=int(st.get("fails", 0)) + 1, error=res["error"])
+        st.pop("note_auto", None)
+        if res.get("primary_error"):
+            st["note"] = f"pokemontcg.io failed ({res['primary_error']}); using TCGdex"
+        elif name == "pokemonsets" and res["ok"]:
+            st.pop("note", None)
+        if name == "trackers" and res.get("note"):
+            st["note"] = res["note"]
+        # a card reader that fails falls back to the manual list: shown as "manual", not "down"
+        if name in ("onepiece", "dragonball"):
+            has_manual = bool(((cfg.get("card_games") or {}).get(name) or {}).get("manual"))
+            st["manual_fallback"] = bool(res["ok"] is False and has_manual)
         if res.get("debug"):
             st["debug_snippet"] = str(res["debug"])[:1500]
         elif res["ok"]:
@@ -263,7 +275,7 @@ def run(only=None, force=False, dry=False, out=print):
         return new, lines
     size = drive.write_dashboard(new)
     out(f"drive: wrote {size / 1024:.1f} KB" + (" (heartbeat)" if stale and signature(prev) == signature(new) else ""))
-    changed, n_ev = calendar.write(new, cfg, ROOT)
+    changed, n_ev = ics.write(new, cfg, ROOT)
     out(f"calendar: {n_ev} entries, {'updated' if changed else 'unchanged'}")
     sent = alerts.discord(lines)
     out(f"discord: {sent} message(s) sent")
