@@ -14,7 +14,7 @@ import sys
 
 import yaml
 
-from . import alerts, diff, drive, ics, notify  # ics.py writes calendar.ics (not named calendar.py, so it can never shadow Python's built-in calendar module)
+from . import alerts, diff, drive, ics, icons, notify  # ics.py writes calendar.ics (not named calendar.py, so it can never shadow Python's built-in calendar module)
 from .util import now_iso, now_utc, parse_iso, result
 
 HEARTBEAT_HOURS = 2  # rewrite dashboard.json at least this often even if nothing changed
@@ -40,6 +40,7 @@ SOURCES = {
     "sdraids": ("raids", "raids"),
     "sdresearch": ("raids", "research"),
     "sdeggs": ("raids", "eggs"),
+    "sdrocket": ("raids", "rocket"),
     "pokemonsets": ("card_games", "tcg_releases"),
     "gcg": ("card_games", "gundam_releases"),
     "onepiece": ("card_games", "onepiece_releases"),
@@ -269,6 +270,12 @@ def run(only=None, force=False, dry=False, out=print):
                and str(f.get("at", "")).startswith("2026-09-30")
                and ({f.get("to"), f.get("from")} & {"in_stock", "preorder_live"}))]
     new["stock_log"] = sorted(flips + old_log, key=lambda f: f.get("at") or "", reverse=True)[:500]
+    # Pokémon icons for raids, research, eggs and Rocket (cached run to run)
+    try:
+        new["icons_status"] = icons.build(new, prev, out)
+    except Exception as e:
+        new["icons"] = prev.get("icons") or {}
+        out(f"icons: skipped ({type(e).__name__}: {str(e)[:80]})")
     # Slack pings on stock changes (first-hand readings were double-checked by their sources)
     nt = notify.run(prev.get("stock", []), new.get("stock", []), cfg, dry=dry)
     out(f"notify: {nt['live']} in-stock change(s), {nt['gone']} back to sold out, slack {'sent' if nt['sent'] else 'not sent'}")

@@ -2,6 +2,7 @@
 import re
 
 from ..util import get, result
+from ..icons import icon_file
 
 URL = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/raids.json"
 
@@ -21,5 +22,7 @@ def fetch(cfg, prev):
         items.append({"name": r.get("name"), "tier": tier_of(r.get("tier")), "tier_label": r.get("tier"),
                       "kind": "raid", "shiny": bool(r.get("canBeShiny")),
                       "types": [t.get("name") for t in (r.get("types") or []) if isinstance(t, dict)],
-                      "cp": (cp.get("normal") or {}), "cp_boosted": (cp.get("boosted") or {})})
+                      "cp": (cp.get("normal") or {}), "cp_boosted": (cp.get("boosted") or {}),
+                      "weather": [w.get("name") for w in (r.get("boostedWeather") or []) if isinstance(w, dict)],
+                      "icon": icon_file(r.get("image"))})
     return result(items)
