@@ -162,7 +162,7 @@ def run(only=None, force=False, dry=False, out=print):
             st.update(ok=False, fails=int(st.get("fails", 0)) + 1, error=res["error"])
         st.pop("note_auto", None)
         if res.get("primary_error"):
-            st["note"] = f"pokemontcg.io failed ({res['primary_error']}); using TCGdex"
+            st["note"] = f"pokemontcg.io failed ({res['primary_error']}); using {res.get('api') or 'TCGdex'}"
         elif name == "pokemonsets" and res["ok"]:
             st.pop("note", None)
         if name in ("trackers", "gamestop", "nintendo") and res.get("note"):
