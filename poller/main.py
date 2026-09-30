@@ -42,6 +42,7 @@ SOURCES = {
     "sdeggs": ("raids", "eggs"),
     "sdrocket": ("raids", "rocket"),
     "pgoapi": ("raids", "raid_difficulty"),
+    "sdmax": ("raids", "power_spots"),
     "gamedata": ("raids", "gamedata_unused"),
     "pokemonsets": ("card_games", "tcg_releases"),
     "gcg": ("card_games", "gundam_releases"),

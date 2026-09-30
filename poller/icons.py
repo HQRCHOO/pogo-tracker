@@ -68,6 +68,18 @@ class Shuffle:
                 return fid
         return None
 
+    def max_name(self, key):
+        """'max:gigantamax:Cinderace' -> '815_b2.png' (Gigantamax) / '_b1' (Dynamax), else the plain icon."""
+        _, kind, name = key.split(":", 2)
+        want = _norm(name)
+        dex = next((int(k) for k, v in self.mons.items() if _norm(v.get("name")) == want), None)
+        if not dex:
+            return None, None
+        for cand in ([f"{dex}_b2.png"] if kind == "gigantamax" else []) + [f"{dex}_b1.png", f"{dex}.png"]:
+            if cand in self.index:
+                return cand, f"pm{dex}.icon.png"
+        return None, f"pm{dex}.icon.png"
+
     def name_for(self, name):
         m = re.match(r"pm(\d+)(?:\.f([A-Z0-9_]+))?(?:\.c([A-Z0-9_]+))?(\.s)?\.icon\.png$", name or "")
         if not m:
@@ -130,6 +142,8 @@ def used(d):
         names.add(e.get("icon"))
     for b in d.get("raid_difficulty") or []:
         names.add(b.get("shiny_icon"))
+    for p in d.get("power_spots") or []:
+        names.add(p.get("icon_key"))
     for g in d.get("rocket") or []:
         for slot in g.get("slots") or []:
             for p in slot:
@@ -158,13 +172,20 @@ def build(new, prev, out=print):
                 break
             uri = None
             try:
-                u = shuffle.name_for(n) if shuffle else None
+                go_name = n
+                if n.startswith("max:"):
+                    u, go_name = shuffle.max_name(n) if shuffle else (None, None)
+                    if not go_name:
+                        failed.append(n)
+                        continue
+                else:
+                    u = shuffle.name_for(n) if shuffle else None
                 if u:
                     r = s.get(UICONS + "pokemon/" + u, timeout=15)
                     if r.status_code == 200 and r.content:
                         uri, src[n] = _encode(r.content), "shuffle"
                 if not uri:
-                    uri = _fetch(n, s)
+                    uri = _fetch(go_name, s)
                     if uri:
                         src[n] = "go"
             except Exception:

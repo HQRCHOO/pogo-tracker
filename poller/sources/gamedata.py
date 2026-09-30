@@ -184,6 +184,6 @@ def fetch(cfg, prev):
     for t in TCHART:
         neutral = next(d for d in TCHART if eff(t, [d]) == 1.0)
         type_top[t] = [x["name"] for x in rank([neutral], mons, pve, cpm40, names, top=5, only_type=t)]
-    dex = sorted({(m["name"], m["atk"], m["def"], m["hp"]) for m in mons if not m["mega"] and not m["shadow"]})
+    dex = sorted({(m["name"], m["atk"], m["def"], m["hp"], "/".join(m["types"])) for m in mons if not m["mega"] and not m["shadow"]})
     return result([], counters=counters, type_top=type_top, dex=[list(x) for x in dex], cpm=[round(x, 7) for x in cpm[:51]],
                   note=f"{len(mons)} released forms · {len(pve)} raid moves · counters for {len(counters)} bosses")
