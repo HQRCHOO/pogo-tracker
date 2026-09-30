@@ -1,0 +1,146 @@
+"""Calculated counters, best attackers per type, and CP data from the game's own numbers.
+
+- PokeMiners/game_masters (latest.json, ~19 MB): raid (PvE) move stats — power, duration, energy — and the
+  CP multiplier table.
+- pvpoke/pvpoke gamemaster.json: every Pokémon form with base stats, types, movesets, elite moves and a
+  released flag (so unreleased Pokémon, Megas and Shadows are left out), plus move names.
+
+Counters use a simplified estimate: damage per second over a fast/charged cycle at level 40 with perfect
+IVs (Shadow ×1.2 attack, ×0.83 defense, STAB ×1.2, Pokémon GO type multipliers), weighted with bulk
+(score = DPS³ × TDO, TDO ∝ DPS × HP × DEF). It ignores the boss's own moves, dodging, weather and friendship.
+"""
+import math
+import re
+
+from ..util import get, result
+
+GM = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/latest/latest.json"
+PVP = "https://raw.githubusercontent.com/pvpoke/pvpoke/master/src/data/gamemaster.json"
+RAIDS = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/raids.json"
+
+TCHART = {
+    "normal": ([], ["rock", "steel"], ["ghost"]), "fire": (["grass", "ice", "bug", "steel"], ["fire", "water", "rock", "dragon"], []),
+    "water": (["fire", "ground", "rock"], ["water", "grass", "dragon"], []), "electric": (["water", "flying"], ["electric", "grass", "dragon"], ["ground"]),
+    "grass": (["water", "ground", "rock"], ["fire", "grass", "poison", "flying", "bug", "dragon", "steel"], []),
+    "ice": (["grass", "ground", "flying", "dragon"], ["fire", "water", "ice", "steel"], []),
+    "fighting": (["normal", "ice", "rock", "dark", "steel"], ["poison", "flying", "psychic", "bug", "fairy"], ["ghost"]),
+    "poison": (["grass", "fairy"], ["poison", "ground", "rock", "ghost"], ["steel"]),
+    "ground": (["fire", "electric", "poison", "rock", "steel"], ["grass", "bug"], ["flying"]),
+    "flying": (["grass", "fighting", "bug"], ["electric", "rock", "steel"], []), "psychic": (["fighting", "poison"], ["psychic", "steel"], ["dark"]),
+    "bug": (["grass", "psychic", "dark"], ["fire", "fighting", "poison", "flying", "ghost", "steel", "fairy"], []),
+    "rock": (["fire", "ice", "flying", "bug"], ["fighting", "ground", "steel"], []), "ghost": (["psychic", "ghost"], ["dark"], ["normal"]),
+    "dragon": (["dragon"], ["steel"], ["fairy"]), "dark": (["psychic", "ghost"], ["fighting", "dark", "fairy"], []),
+    "steel": (["ice", "rock", "fairy"], ["fire", "water", "electric", "steel"], []), "fairy": (["fighting", "dragon", "dark"], ["fire", "poison", "steel"], []),
+}
+BOSS_DEF = 200.0   # generic raid-boss defense; a constant factor, so it doesn't change the order
+TOP = 6
+
+
+def eff(att, defs):
+    m = 1.0
+    for d in defs:
+        se, nve, imm = TCHART.get(att, ([], [], []))
+        m *= 1.6 if d in se else 0.625 if d in nve else 0.390625 if d in imm else 1.0
+    return m
+
+
+def display_name(species):
+    n = species
+    for tag, pre in (("Mega X", "Mega "), ("Mega Y", "Mega "), ("Mega", "Mega "), ("Primal", "Primal "), ("Shadow", "Shadow ")):
+        m = re.match(r"^(.*) \(" + tag + r"\)$", n)
+        if m:
+            return pre + m.group(1) + (" " + tag.split()[-1] if tag.startswith("Mega ") else "")
+    return n
+
+
+def load():
+    gm = get(GM, timeout=120).json()
+    pvp = get(PVP, timeout=60).json()
+    pve, cpm = {}, []
+    for t in gm:
+        tid = t.get("templateId", "")
+        dat = t.get("data") or {}
+        ms = dat.get("moveSettings")
+        if ms and re.match(r"^V\d+_MOVE_", tid):
+            mid = str(ms.get("movementId") or "").replace("_FAST", "")
+            pve[mid] = {"type": str(ms.get("pokemonType", "")).replace("POKEMON_TYPE_", "").lower(),
+                        "power": float(ms.get("power") or 0), "dur": float(ms.get("durationMs") or 1000) / 1000.0,
+                        "energy": float(ms.get("energyDelta") or 0)}
+        if tid == "PLAYER_LEVEL_SETTINGS":
+            cpm = (dat.get("playerLevel") or {}).get("cpMultiplier") or []
+    names = {m["moveId"]: m.get("name") or m["moveId"].title() for m in pvp.get("moves") or []}
+    mons = []
+    for p in pvp.get("pokemon") or []:
+        if not p.get("released") or p.get("aliasId"):
+            continue
+        tags = p.get("tags") or []
+        mons.append({"id": p["speciesId"], "name": display_name(p.get("speciesName") or p["speciesId"]),
+                     "types": [t for t in p.get("types") or [] if t and t != "none"],
+                     "atk": p["baseStats"]["atk"], "def": p["baseStats"]["def"], "hp": p["baseStats"]["hp"],
+                     "fast": p.get("fastMoves") or [], "charged": p.get("chargedMoves") or [],
+                     "elite": set((p.get("eliteMoves") or []) + (p.get("legacyMoves") or [])),
+                     "shadow": "shadow" in tags, "mega": "mega" in tags})
+    return pve, cpm, names, mons
+
+
+def best_moveset(m, defs, pve, cpm40, only_type=None):
+    a = (m["atk"] + 15) * cpm40 * (1.2 if m["shadow"] else 1.0)
+    best = None
+    for f in m["fast"]:
+        fm = pve.get(f)
+        if not fm or fm["energy"] <= 0 or (only_type and fm["type"] != only_type):
+            continue
+        fd = math.floor(0.5 * fm["power"] * a / BOSS_DEF * (1.2 if fm["type"] in m["types"] else 1) * eff(fm["type"], defs)) + 1
+        for c in m["charged"]:
+            cm = pve.get(c)
+            if not cm or cm["energy"] >= 0 or (only_type and cm["type"] != only_type):
+                continue
+            cd = math.floor(0.5 * cm["power"] * a / BOSS_DEF * (1.2 if cm["type"] in m["types"] else 1) * eff(cm["type"], defs)) + 1
+            n = math.ceil(-cm["energy"] / fm["energy"])
+            dps = max((n * fd + cd) / (n * fm["dur"] + cm["dur"]), fd / fm["dur"])
+            if not best or dps > best[0]:
+                best = (dps, f, c)
+    if not best:
+        return None
+    hp = math.floor((m["hp"] + 15) * cpm40)
+    d = (m["def"] + 15) * cpm40 * (0.8333 if m["shadow"] else 1.0)
+    return {"dps": best[0], "score": best[0] ** 4 * hp * d, "fast": best[1], "charged": best[2]}
+
+
+def rank(defs, mons, pve, cpm40, names, top=TOP, only_type=None):
+    rows = []
+    for m in mons:
+        b = best_moveset(m, defs, pve, cpm40, only_type)
+        if b:
+            rows.append((b["score"], m, b))
+    rows.sort(key=lambda r: -r[0])
+    out, seen = [], set()
+    for score, m, b in rows:
+        if m["name"] in seen:
+            continue
+        seen.add(m["name"])
+        out.append({"name": m["name"], "fast": names.get(b["fast"], b["fast"]), "charged": names.get(b["charged"], b["charged"]),
+                    "elite": [x for x in (names.get(b["fast"], b["fast"]) if b["fast"] in m["elite"] else None,
+                                          names.get(b["charged"], b["charged"]) if b["charged"] in m["elite"] else None) if x]})
+        if len(out) >= top:
+            break
+    return out
+
+
+def fetch(cfg, prev):
+    pve, cpm, names, mons = load()
+    cpm40 = cpm[39] if len(cpm) > 39 else 0.7903
+    counters = {}
+    for r in get(RAIDS).json():
+        defs = [t.get("name") for t in r.get("types") or [] if isinstance(t, dict)]
+        img = str(r.get("image") or "").rsplit("/", 1)[-1] or r.get("name")
+        key = ("shadow:" if str(r.get("name", "")).lower().startswith("shadow ") else "") + img
+        if defs:
+            counters[key] = rank(defs, mons, pve, cpm40, names)
+    type_top = {}
+    for t in TCHART:
+        neutral = next(d for d in TCHART if eff(t, [d]) == 1.0)
+        type_top[t] = [x["name"] for x in rank([neutral], mons, pve, cpm40, names, top=5, only_type=t)]
+    dex = sorted({(m["name"], m["atk"], m["def"], m["hp"]) for m in mons if not m["mega"] and not m["shadow"]})
+    return result([], counters=counters, type_top=type_top, dex=[list(x) for x in dex], cpm=[round(x, 7) for x in cpm[:51]],
+                  note=f"{len(mons)} released forms · {len(pve)} raid moves · counters for {len(counters)} bosses")

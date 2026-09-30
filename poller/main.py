@@ -41,6 +41,8 @@ SOURCES = {
     "sdresearch": ("raids", "research"),
     "sdeggs": ("raids", "eggs"),
     "sdrocket": ("raids", "rocket"),
+    "pgoapi": ("raids", "raid_difficulty"),
+    "gamedata": ("raids", "gamedata_unused"),
     "pokemonsets": ("card_games", "tcg_releases"),
     "gcg": ("card_games", "gundam_releases"),
     "onepiece": ("card_games", "onepiece_releases"),
@@ -180,7 +182,12 @@ def run(only=None, force=False, dry=False, out=print):
             new[key] = res["items"]
         if name == "pokemonsets" and res.get("tcgdex_cache"):
             new["tcgdex_cache"] = res["tcgdex_cache"]
+        if name == "gamedata" and res.get("ok"):
+            new["gamedata"] = {k: res.get(k) for k in ("counters", "type_top", "dex", "cpm")}
+        if name in ("gamedata", "onepiece", "pokemonsets") and res.get("note"):
+            st["note"] = res["note"]
 
+    new.pop("gamedata_unused", None)
     # Card games: scraped (if it worked) + manual lists from the watchlist.
     games = cfg.get("card_games") or {}
     for name, key, gkey in (("onepiece", "onepiece_releases", "onepiece"), ("dragonball", "dragonball_releases", "dragonball")):

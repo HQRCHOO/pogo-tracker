@@ -15,6 +15,7 @@ from urllib.parse import quote
 import requests
 
 BASE = "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/"
+BASE2 = "https://raw.githubusercontent.com/pokemon-go-api/assets/main/Pokemon/"   # second source, also has shiny icons
 SIZE = 40
 MAX_NEW_PER_RUN = 450
 TIME_BUDGET = 90  # seconds
@@ -40,8 +41,8 @@ def _fallbacks(name):
 
 def _fetch(name, session):
     from PIL import Image
-    for cand in _fallbacks(name):
-        r = session.get(BASE + quote(cand), timeout=15)
+    for cand, base in [(c, b) for c in _fallbacks(name) for b in (BASE, BASE2)]:
+        r = session.get(base + quote(cand), timeout=15)
         if r.status_code != 200 or not r.content:
             continue
         im = Image.open(io.BytesIO(r.content)).convert("RGBA")
@@ -64,6 +65,8 @@ def used(d):
             names.add(w.get("icon"))
     for e in d.get("eggs") or []:
         names.add(e.get("icon"))
+    for b in d.get("raid_difficulty") or []:
+        names.add(b.get("shiny_icon"))
     for g in d.get("rocket") or []:
         for slot in g.get("slots") or []:
             for p in slot:

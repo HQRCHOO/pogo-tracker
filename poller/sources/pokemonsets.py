@@ -12,6 +12,7 @@ from ..util import get, result
 
 PTCG = "https://api.pokemontcg.io/v2/sets"
 TCGDEX = "https://api.tcgdex.net/v2/en/sets"
+PTCG_DATA = "https://raw.githubusercontent.com/PokemonTCG/pokemon-tcg-data/master/sets/en.json"  # the data behind pokemontcg.io
 OTHER = re.compile(r"trainer kit|mcdonald|promo|celebrations: classic|black star", re.I)
 # Not paper booster sets: the TCG Pocket phone game, energy sets, promos, kits, samples.
 SKIP_SERIES = re.compile(r"pocket", re.I)
@@ -49,6 +50,16 @@ def _ptcg():
     return items
 
 
+def _ptcg_data():
+    lo, hi = _window()
+    items = []
+    for s in get(PTCG_DATA).json():
+        d = str(s.get("releaseDate") or "").replace("/", "-")
+        if d and lo <= d <= hi and not skip(s.get("name"), s.get("series")):
+            items.append(_row(s.get("id"), s.get("name"), d, s.get("series"), "https://pokemontcg.io/sets/" + str(s.get("id")), "pokemon-tcg-data"))
+    return items
+
+
 def _tcgdex(prev):
     cache = dict((prev or {}).get("tcgdex_cache") or {})
     lo, hi = _window()
@@ -68,6 +79,10 @@ def _tcgdex(prev):
 def fetch(cfg, prev):
     try:
         return result(_ptcg(), api="pokemontcg.io")
-    except Exception as e:  # fall back to TCGdex
-        items, cache = _tcgdex(prev)
-        return result(items, api="tcgdex", tcgdex_cache=cache, primary_error=f"{type(e).__name__}: {str(e)[:120]}")
+    except Exception as e:
+        err = f"{type(e).__name__}: {str(e)[:120]}"
+    try:  # same data, straight from GitHub
+        return result(_ptcg_data(), api="pokemon-tcg-data", primary_error=err)
+    except Exception:
+        items, cache = _tcgdex(prev)   # last resort
+        return result(items, api="tcgdex", tcgdex_cache=cache, primary_error=err)
