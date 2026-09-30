@@ -97,6 +97,11 @@ bestbuy:
 bestbuy_button:
   enabled: false                   # off for now: Best Buy stalls GitHub's servers (timed out). true turns it back on
 
+max_roster:                         # Power Spot bosses the poller packs Dynamax icons for (v3.51).
+  # Seeded from the PoGo agent's pool on Sep 30; Snack Nap's live list and the events feed add more automatically.
+  dynamax: [Magikarp, Wooloo, Skwovet, Sobble, Grookey, Bounsweet, Inkay, Drilbur, Woobat, Trubbish, Rookidee, Hoothoot, Combee, Cottonee, Trapinch, Pikachu, Growlithe, Roggenrola, Spheal, Pidove, Scorbunny, Krabby, Omanyte, Squirtle, Charmander, Kabuto, Abra, Ralts, Bulbasaur, Gastly, Caterpie, Hatenna, Eevee, Wailmer, Feebas, Darumaka, Machop, Shuckle, Electabuzz, Magmar, Deino, Chansey, Hitmontop, Cryogonal, Passimian, Beldum, Falinks, Hitmonlee, Hitmonchan, Sableye, Drampa, Moltres]
+  gigantamax: [Cinderace]
+
 notify:                            # Slack pings on stock changes (SLACK_WEBHOOK secret)
   slack: true
   mention_on_first_hand: "<!here>"  # prefix for confirmed first-hand in-stock / preorder pings; "" for none

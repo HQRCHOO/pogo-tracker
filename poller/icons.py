@@ -71,8 +71,18 @@ class Shuffle:
     def max_name(self, key):
         """'max:gigantamax:Cinderace' -> '815_b2.png' (Gigantamax) / '_b1' (Dynamax), else the plain icon."""
         _, kind, name = key.split(":", 2)
+        region = None
+        m = re.match(r"^(Galarian|Alolan|Hisuian|Paldean)\s+(.+)$", name)
+        if m:
+            region, name = {"Galarian": "GALARIAN", "Alolan": "ALOLA", "Hisuian": "HISUIAN", "Paldean": "PALDEA"}[m.group(1)], m.group(2)
         want = _norm(name)
         dex = next((int(k) for k, v in self.mons.items() if _norm(v.get("name")) == want), None)
+        if dex and region:
+            fid = self._form_id(dex, region)
+            if fid:
+                for cand in (f"{dex}_b1_f{fid}.png", f"{dex}_f{fid}.png"):
+                    if cand in self.index:
+                        return cand, f"pm{dex}.f{region}.icon.png"
         if not dex:
             return None, None
         for cand in ([f"{dex}_b2.png"] if kind == "gigantamax" else []) + [f"{dex}_b1.png", f"{dex}.png"]:
@@ -144,6 +154,8 @@ def used(d):
         names.add(b.get("shiny_icon"))
     for p in d.get("power_spots") or []:
         names.add(p.get("icon_key"))
+    for k in (d.get("max_roster") or {}):          # "dynamax:Wooloo" -> "max:dynamax:Wooloo"
+        names.add("max:" + k)
     for g in d.get("rocket") or []:
         for slot in g.get("slots") or []:
             for p in slot:
