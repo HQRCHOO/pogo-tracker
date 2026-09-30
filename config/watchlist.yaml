@@ -3,7 +3,7 @@
 # they are GitHub secrets (guide §1).
 
 dashboard_url: https://claude.ai/artifact/V815VkYyqmhDTXXipuvqkV
-github_user: HQRCHOO
+github_user: "HQRCHOO"   # builds the phone-calendar link to calendar.ics in this repo
 
 location:
   home:                     # all distances and "nearby" are measured from here
@@ -31,10 +31,15 @@ stock:
     item: Pokémon GO Plus +
     retailer: target
     tcin: "88714054"               # target.com/p/pokemon-go-plus/-/A-88714054
-  - name: GO Plus+ (GameStop)
+  - name: GO Plus+ (Nintendo Store)
     item: Pokémon GO Plus +
-    retailer: gamestop
-    url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/451400.html   # SKU 451400 (same listing as …/20037819.html)
+    retailer: nintendo
+    url: https://www.nintendo.com/us/store/products/pokemon-go-plus-plus-112387/
+  # GameStop blocks automated checks (HTTP 403); HotStock covers it under `trackers:` below.
+  # - name: GO Plus+ (GameStop)
+  #   item: Pokémon GO Plus +
+  #   retailer: gamestop
+  #   url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/451400.html   # SKU 451400
 
 target:
   redsky_url: ""                   # paste the current template from retail-drop-monitor; uses {tcin} {store_id} {zip} {key}
@@ -56,7 +61,7 @@ card_games:
   onepiece:
     manual:                        # used when the official page can't be read; also adds unlisted sets
       - {id: eb05, name: "Extra Booster Heroines Edition vol.2 [EB-05]", category: BOOSTER PACK, release_date: "2026-10-30", msrp: "$4.99"}
-      - {id: op18, name: "OP-18 The Dominance of God", category: BOOSTER PACK, release_date: "2026-11-20", confirmed: false, note: "Date from retailers; Bandai hasn't posted it yet"}
+      - {id: op18, name: "OP-18 The Dominance of God", category: BOOSTER PACK, release_date: "2026-11-20", msrp: "$4.99", note: "Release date from the official products page"}
       - {id: st37-st38, name: "Starter Decks ST-37 / ST-38", category: DECKS, release_date: "2026-12", confirmed: false}
   dragonball:
     manual:
@@ -100,6 +105,7 @@ trackers:                          # public tracker pages (secondhand status; no
 
 cadence_minutes:                   # estimates; tune after week one
   trackers: 30
+  nintendo: 30
   stock: 15
   pogo_events: 30
   discord: 30

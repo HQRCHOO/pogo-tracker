@@ -13,6 +13,13 @@ from ..util import get, result
 PTCG = "https://api.pokemontcg.io/v2/sets"
 TCGDEX = "https://api.tcgdex.net/v2/en/sets"
 OTHER = re.compile(r"trainer kit|mcdonald|promo|celebrations: classic|black star", re.I)
+# Not paper booster sets: the TCG Pocket phone game, energy sets, promos, kits, samples.
+SKIP_SERIES = re.compile(r"pocket", re.I)
+SKIP_NAME = re.compile(r"energy|promo|mcdonald|trainer kit|black star|jumbo|sample|classic collection", re.I)
+
+
+def skip(name, series):
+    return bool(SKIP_SERIES.search(series or "") or SKIP_NAME.search(name or ""))
 
 
 def _window(days_back=730, days_ahead=120):
@@ -34,7 +41,7 @@ def _ptcg():
         data = js.get("data") or []
         for s in data:
             d = str(s.get("releaseDate") or "").replace("/", "-")
-            if d and lo <= d <= hi:
+            if d and lo <= d <= hi and not skip(s.get("name"), s.get("series")):
                 items.append(_row(s.get("id"), s.get("name"), d, s.get("series"), "https://pokemontcg.io/sets/" + str(s.get("id")), "pokemontcg.io"))
         if len(data) < 250 or page >= 4:
             break
@@ -53,7 +60,7 @@ def _tcgdex(prev):
             cache[sid] = {"name": full.get("name"), "date": full.get("releaseDate"),
                           "series": (full.get("serie") or {}).get("name")}
         c = cache[sid]
-        if c.get("date") and lo <= c["date"] <= hi:
+        if c.get("date") and lo <= c["date"] <= hi and not skip(c.get("name"), c.get("series")):
             items.append(_row(sid, c["name"], c["date"], c.get("series"), "https://tcgdex.dev/", "tcgdex"))
     return items, cache
 

@@ -80,4 +80,6 @@ def fetch(cfg, prev):
             items.append(row)
     if not items:
         items = parse(html_text(html))
-    return result(items, links=len(links), debug=None if items else html_text(html)[:1500])
+    text = html_text(html)
+    dbg = None if items else (f"{len(links)} product links found. " + (text[:1500] if len(text.strip()) > 200 else "Page text was nearly empty (likely built by JavaScript). Raw page start:\n" + html[:1500]))
+    return result(items, links=len(links), debug=dbg)

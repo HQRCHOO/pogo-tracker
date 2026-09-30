@@ -174,11 +174,14 @@ def fetch(cfg, prev):
     if not watch:
         return result(ok=None, error="not configured")
     rows, history, errors, reads = [], [], [], 0
+    counts, tl_debug = {"HotStock": 0, "TrackaLacker": 0}, None
     for w in watch:
         item, match = w.get("item") or "Pokémon GO Plus +", w.get("match") or {}
         if w.get("hotstock"):
             try:
-                rows += [dict(r, item=item) for r in parse_hotstock(get(w["hotstock"], browser=True).text, item, match, w["hotstock"])]
+                got = [dict(r, item=item) for r in parse_hotstock(get(w["hotstock"], browser=True).text, item, match, w["hotstock"])]
+                rows += got
+                counts["HotStock"] += len(got)
                 reads += 1
             except Exception as e:
                 errors.append(f"HotStock: {type(e).__name__}")
@@ -187,12 +190,16 @@ def fetch(cfg, prev):
                 page = get(w["trackalacker"], browser=True).text
                 reads += 1
                 listing_urls = [w["trackalacker"]] if "/listings/" in w["trackalacker"] else parse_showcase_links(page, w["trackalacker"])[:8]
+                before = counts["TrackaLacker"]
                 for u in listing_urls:
                     lp = page if u == w["trackalacker"] else get(u, browser=True).text
                     row, ev = parse_listing(lp, item, match, u)
                     if row:
                         rows.append(dict(row, item=item))
                         history += ev
+                        counts["TrackaLacker"] += 1
+                if counts["TrackaLacker"] == before:
+                    tl_debug = f"TrackaLacker: {len(listing_urls)} listing links found. Page start:\n" + page[:1500]
             except Exception as e:
                 errors.append(f"TrackaLacker: {type(e).__name__}")
     # merge per item + retailer label: the livelier status wins; note both trackers
@@ -211,5 +218,5 @@ def fetch(cfg, prev):
               "via": r["via"], "tracker_url": r["tracker_url"]} for r in merged.values()]
     if not items and not reads:
         return result(ok=False, error="; ".join(errors) or "no tracker pages read")
-    return result(items, history=history, note="; ".join(errors) or None,
-                  debug=None if items else "trackers read but 0 rows matched the watchlist")
+    note = " · ".join(f"{k} {v}" for k, v in counts.items()) + (" · " + "; ".join(errors) if errors else "")
+    return result(items, history=history, note=note, debug=tl_debug or (None if items else "trackers read but 0 rows matched the watchlist"))
