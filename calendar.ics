@@ -223,12 +223,6 @@ SUMMARY:Pokémon TCG: 30th Celebration Ultra-Premium Collections (Wave 3)
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:tcg_releases-set-me55@trackmaster
-DTSTART;VALUE=DATE:20260916
-SUMMARY:Pokémon TCG: 30th Celebration
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
 UID:tcg_releases-set-me5@trackmaster
 DTSTART;VALUE=DATE:20260717
 SUMMARY:Pokémon TCG: Pitch Black
