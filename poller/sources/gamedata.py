@@ -17,6 +17,7 @@ from ..util import get, result
 GM = "https://raw.githubusercontent.com/PokeMiners/game_masters/master/latest/latest.json"
 PVP = "https://raw.githubusercontent.com/pvpoke/pvpoke/master/src/data/gamemaster.json"
 RAIDS = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/raids.json"
+ROCKET = "https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/rocketLineups.json"
 
 TCHART = {
     "normal": ([], ["rock", "steel"], ["ghost"]), "fire": (["grass", "ice", "bug", "steel"], ["fire", "water", "rock", "dragon"], []),
@@ -170,6 +171,89 @@ def tiers(defs, mons, pve, cpm40, names):
     return out
 
 
+def _pick(m, b, names):
+    fast, charged = names.get(b["fast"], b["fast"]), names.get(b["charged"], b["charged"])
+    return {"name": m["name"], "fast": fast, "charged": charged, "ft": None, "ct": None,
+            "elite": [x for x, mid in ((fast, b["fast"]), (charged, b["charged"])) if mid in m["elite"]]}
+
+
+def rocket_teams(mons, pve, cpm40, names):
+    """For every Rocket lineup: an easy team (regular non-legendary Pokémon, no Shadows, no Elite TM moves)
+    and a power team (legendaries and Shadows OK),
+    one attacker per slot. Each slot's pick is the attacker with the best average showing against every
+    Pokémon that can appear in that slot (score relative to the best possible answer for each). Megas are
+    left out because they can't be used in Team GO Rocket battles."""
+    lineups = get(ROCKET).json()
+    pool = [m for m in mons if not m["mega"]]
+    combos = {}
+    for g in lineups:
+        for key in ("firstPokemon", "secondPokemon", "thirdPokemon"):
+            for p in g.get(key) or []:
+                c = tuple(sorted(t.lower() for t in (p.get("types") or []) if t))
+                if c:
+                    combos.setdefault(c, None)
+    easy_idx = [i for i, m in enumerate(pool) if not m["legend"] and not m["shadow"]]
+    all_idx = list(range(len(pool)))
+    plain = {i: dict(pool[i], fast=[f for f in pool[i]["fast"] if f not in pool[i]["elite"]],
+                     charged=[c for c in pool[i]["charged"] if c not in pool[i]["elite"]]) for i in easy_idx}
+    # score every attacker once per type combination (easy picks use only their regular moves)
+    table, etable = {}, {}
+    for c in combos:
+        table[c] = [best_moveset(m, list(c), pve, cpm40) for m in pool]
+        etable[c] = {i: best_moveset(plain[i], list(c), pve, cpm40) for i in easy_idx}
+    best = {c: {"easy": max((b["score"] for b in etable[c].values() if b), default=1),
+                "power": max((b["score"] for b in table[c] if b), default=1)} for c in table}
+
+    def ranked(cands, which, idxs):
+        rows = []
+        for i in idxs:
+            rel, bs = 0.0, None
+            for c in cands:
+                b = etable[c].get(i) if which == "easy" else table[c][i]
+                if not b:
+                    rel = -1
+                    break
+                rel += (b["score"] / best[c][which]) ** 0.25
+                if bs is None or b["score"] > bs["score"]:
+                    bs = b
+            if rel > 0:
+                rows.append((rel / len(cands), i, bs))
+        rows.sort(key=lambda r: -r[0])
+        return rows
+
+    out = {}
+    for g in lineups:
+        slots = []
+        for key in ("firstPokemon", "secondPokemon", "thirdPokemon"):
+            cands = sorted({tuple(sorted(t.lower() for t in (p.get("types") or []) if t)) for p in g.get(key) or []} - {()})
+            slots.append(cands)
+        res = {}
+        for which, idxs in (("easy", easy_idx), ("power", all_idx)):
+            def mk(m, b, rel):
+                return dict(_pick(m, b, names), ft=pve.get(b["fast"], {}).get("type"), ct=pve.get(b["charged"], {}).get("type"), pct=round(rel * 100))
+            rankings = [ranked(c, which, idxs) if c else [] for c in slots]
+            team, used = [], set()
+            for r in rankings:                      # 1) the team: best available per slot, all different
+                pick = next(((rel, i, b) for rel, i, b in r if pool[i]["name"] not in used), None)
+                if pick:
+                    used.add(pool[pick[1]]["name"]); team.append(mk(pool[pick[1]], pick[2], pick[0]))
+                else:
+                    team.append(None)
+            backups, shown = [], set(used)
+            for r in rankings:                      # 2) backups: never a team member, never repeated
+                alts = []
+                for rel, i, b in r:
+                    if pool[i]["name"] in shown:
+                        continue
+                    shown.add(pool[i]["name"]); alts.append(mk(pool[i], b, rel))
+                    if len(alts) >= 2:
+                        break
+                backups.append(alts)
+            res[which] = {"team": team, "backups": backups}
+        out[g.get("name")] = res
+    return out
+
+
 def fetch(cfg, prev):
     pve, cpm, names, mons = load()
     cpm40 = cpm[39] if len(cpm) > 39 else 0.7903
@@ -185,5 +269,9 @@ def fetch(cfg, prev):
         neutral = next(d for d in TCHART if eff(t, [d]) == 1.0)
         type_top[t] = [x["name"] for x in rank([neutral], mons, pve, cpm40, names, top=5, only_type=t)]
     dex = sorted({(m["name"], m["atk"], m["def"], m["hp"], "/".join(m["types"])) for m in mons if not m["mega"] and not m["shadow"]})
-    return result([], counters=counters, type_top=type_top, dex=[list(x) for x in dex], cpm=[round(x, 7) for x in cpm[:51]],
+    try:
+        rteams = rocket_teams(mons, pve, cpm40, names)
+    except Exception:
+        rteams = (prev.get("gamedata") or {}).get("rocket_teams") or {}
+    return result([], counters=counters, type_top=type_top, dex=[list(x) for x in dex], cpm=[round(x, 7) for x in cpm[:51]], rocket_teams=rteams,
                   note=f"{len(mons)} released forms · {len(pve)} raid moves · counters for {len(counters)} bosses")

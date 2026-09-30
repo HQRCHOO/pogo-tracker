@@ -184,7 +184,7 @@ def run(only=None, force=False, dry=False, out=print):
         if name == "pokemonsets" and res.get("tcgdex_cache"):
             new["tcgdex_cache"] = res["tcgdex_cache"]
         if name == "gamedata" and res.get("ok"):
-            new["gamedata"] = {k: res.get(k) for k in ("counters", "type_top", "dex", "cpm")}
+            new["gamedata"] = {k: res.get(k) for k in ("counters", "type_top", "dex", "cpm", "rocket_teams")}
         if name in ("gamedata", "onepiece", "pokemonsets") and res.get("note"):
             st["note"] = res["note"]
 
