@@ -1,7 +1,8 @@
 """Nintendo Store (US) product pages: first-hand online stock for GO Plus+.
 
 Reads the product page's structured data: JSON-LD offers first, then the
-Next.js page data (__NEXT_DATA__), then visible button text. Configure in
+Next.js page data (__NEXT_DATA__), then visible button text. Price comes only from
+the JSON-LD offer (other prices on the page belong to other products). Configure in
 watchlist.yaml as a stock entry with retailer: nintendo and the product URL.
 If the page can't be read (blocked, or built entirely by JavaScript), the source
 reports an error and saves what it saw for the Sources tab.
@@ -60,10 +61,6 @@ def parse(page):
                 elif isinstance(found.get("availability"), str):
                     av = found["availability"].lower()
                     status = "in_stock" if "in stock" in av or av == "instock" else "unavailable"
-                for k in ("finalPrice", "salePrice", "regularPrice"):
-                    v = found.get(k)
-                    if isinstance(v, (int, float)) and price is None:
-                        price = float(v)
             except Exception:
                 pass
     if status is None:
@@ -74,9 +71,6 @@ def parse(page):
             status = "in_stock"
         elif re.search(r"\bpre-?order\b", text, re.I):
             status = "preorder_live"
-        if price is None:
-            pm = re.search(r"\$\s*([\d]+\.\d{2})", text)
-            price = float(pm.group(1)) if pm else None
     return status, price
 
 

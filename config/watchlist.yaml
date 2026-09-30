@@ -35,11 +35,10 @@ stock:
     item: Pokémon GO Plus +
     retailer: nintendo
     url: https://www.nintendo.com/us/store/products/pokemon-go-plus-plus-112387/
-  # GameStop blocks automated checks (HTTP 403); HotStock covers it under `trackers:` below.
-  # - name: GO Plus+ (GameStop)
-  #   item: Pokémon GO Plus +
-  #   retailer: gamestop
-  #   url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/451400.html   # SKU 451400
+  - name: GO Plus+ (GameStop)       # sometimes answers 403; it caught the Sep 30 in-stock at 2:37 AM PT
+    item: Pokémon GO Plus +
+    retailer: gamestop
+    url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/451400.html   # SKU 451400
 
 target:
   redsky_url: ""                   # paste the current template from retail-drop-monitor; uses {tcin} {store_id} {zip} {key}

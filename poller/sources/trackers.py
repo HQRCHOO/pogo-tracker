@@ -160,13 +160,20 @@ def parse_listing(page, item, match, src_url):
 
 
 def parse_showcase_links(page, base):
+    """Listing pages linked from a showcase page: relative or full addresses, single or double quotes."""
     links, seen = [], set()
-    for h in re.findall(r'href="(/products/showcase/[^"/]+/listings/\d+/[^"#?]+)"', page):
-        full = "https://www.trackalacker.com" + h
+    for h in re.findall(r"""href=["']((?:https?://(?:www\.)?trackalacker\.com)?/[^"'#?]*?/listings/\d+[^"'#?]*)["']""", page):
+        full = h if h.startswith("http") else "https://www.trackalacker.com" + h
         if full not in seen:
             seen.add(full)
             links.append(full)
     return links
+
+
+def listing_hints(page):
+    """Every link that mentions 'listing' (saved for debugging when none are recognized)."""
+    hs = sorted(set(re.findall(r"""href=["']([^"']*listing[^"']*)["']""", page, re.I)))
+    return hs[:40]
 
 
 def fetch(cfg, prev):
@@ -199,7 +206,9 @@ def fetch(cfg, prev):
                         history += ev
                         counts["TrackaLacker"] += 1
                 if counts["TrackaLacker"] == before:
-                    tl_debug = f"TrackaLacker: {len(listing_urls)} listing links found. Page start:\n" + page[:1500]
+                    hints = listing_hints(page)
+                    tl_debug = (f"TrackaLacker: {len(listing_urls)} listing links recognized. Links mentioning 'listing': "
+                                + (", ".join(hints) if hints else "none") + "\nPage start:\n" + page[:900])
             except Exception as e:
                 errors.append(f"TrackaLacker: {type(e).__name__}")
     # merge per item + retailer label: the livelier status wins; note both trackers
