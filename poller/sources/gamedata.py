@@ -161,6 +161,7 @@ def tiers(defs, mons, pve, cpm40, names):
             used.add(m["name"])
             fast, charged = names.get(b["fast"], b["fast"]), names.get(b["charged"], b["charged"])
             picks.append({"name": m["name"], "fast": fast, "charged": charged,
+                          "ft": (pve.get(b["fast"]) or {}).get("type"), "ct": (pve.get(b["charged"]) or {}).get("type"),
                           "elite": [x for x, mid in ((fast, b["fast"]), (charged, b["charged"])) if mid in m["elite"]],
                           "pct": round((score / top) ** 0.25 * 100)})
             if len(picks) >= n:
