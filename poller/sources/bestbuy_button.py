@@ -23,7 +23,7 @@ def read(sku):
 
 def fetch(cfg, prev):
     watch = [s for s in cfg.get("stock", []) if s.get("retailer") == "bestbuy" and str(s.get("sku", "")).isdigit()]
-    if not watch:
+    if (cfg.get("bestbuy_button") or {}).get("enabled") is False or not watch:
         return result(ok=None, error="not configured")
     items, notes = [], []
     for w in watch:
