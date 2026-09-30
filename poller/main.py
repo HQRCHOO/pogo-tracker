@@ -158,7 +158,7 @@ def run(only=None, force=False, dry=False, out=print):
             st["note"] = f"pokemontcg.io failed ({res['primary_error']}); using TCGdex"
         elif name == "pokemonsets" and res["ok"]:
             st.pop("note", None)
-        if name == "trackers" and res.get("note"):
+        if name in ("trackers", "gamestop", "nintendo") and res.get("note"):
             st["note"] = res["note"]
         # a card reader that fails falls back to the manual list: shown as "manual", not "down"
         if name in ("onepiece", "dragonball"):
@@ -261,8 +261,9 @@ def run(only=None, force=False, dry=False, out=print):
                               "source": h.get("source"), "tracker_url": h.get("tracker_url")})
     # one-time cleanup: GameStop "in stock" readings on Sep 30, 2026 came from the page's placeholder
     # (read before its scripts loaded), so they were never real restocks
-    old_log = [f for f in (prev.get("stock_log") or []) if not (f.get("retailer") == "GameStop" and f.get("to") == "in_stock"
-               and str(f.get("at", "")).startswith("2026-09-30") and not f.get("source"))]
+    old_log = [f for f in (prev.get("stock_log") or []) if not (f.get("retailer") == "GameStop" and not f.get("source")
+               and str(f.get("at", "")).startswith("2026-09-30")
+               and ({f.get("to"), f.get("from")} & {"in_stock", "preorder_live"}))]
     new["stock_log"] = sorted(flips + old_log, key=lambda f: f.get("at") or "", reverse=True)[:500]
     lines, new["alerted"] = diff.compute(prev, new, cfg)
     new["alerts_log"] = ([{"at": now_iso(), "line": ln} for ln in lines] + list(prev.get("alerts_log") or []))[:30]

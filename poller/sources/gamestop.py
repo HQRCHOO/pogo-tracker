@@ -16,22 +16,27 @@ PRE = re.compile(r"\bpre-?order( now)?\b", re.I)
 BUY = re.compile(r"\badd to cart\b", re.I)
 
 
+def purchase_buttons(buttons):
+    """The product's own purchase button: visible, outside menus / headers / "you may also like"
+    sections, short purchase wording, and the closest such button to the product title."""
+    c = [b for b in buttons or [] if b.get("visible", True) and b.get("zone") != "aside"
+         and 0 < len((b.get("t") or "").strip()) <= 30 and (BUY.search(b["t"]) or PRE.search(b["t"]) or OUT.search(b["t"]))]
+    c.sort(key=lambda b: b.get("dist", 99999))
+    return c[:1]
+
+
 def status_from_buttons(buttons):
-    """The buy button decides: an enabled Add to Cart / Pre-order means live;
-    a disabled one, or a button reading Not Available / Sold Out, means out."""
-    live, out = None, False
-    for b in buttons or []:
+    """The purchase button decides: enabled Add to Cart / Pre-order means live;
+    disabled, or reading Not Available / Sold Out, means out."""
+    for b in purchase_buttons(buttons):
         t, dis = b.get("t") or "", b.get("d")
-        if BUY.search(t) or PRE.search(t):
-            if dis:
-                out = True
-            else:
-                live = "preorder_live" if PRE.search(t) else "in_stock"
-        elif OUT.search(t):
-            out = True
-    if live:
-        return live
-    return "unavailable" if out else "unknown"
+        if OUT.search(t) or dis:
+            return "unavailable"
+        if PRE.search(t):
+            return "preorder_live"
+        if BUY.search(t):
+            return "in_stock"
+    return "unknown"
 
 
 def status_from_text(text):
@@ -49,7 +54,7 @@ def fetch(cfg, prev):
     watch = [s for s in cfg.get("stock", []) if s.get("retailer") == "gamestop" and s.get("url")]
     if not watch:
         return result(ok=None, error="not configured")
-    items, notes = [], []
+    items, notes, debug = [], [], None
     for w in watch:
         status, price, note = "unknown", None, None
         try:
@@ -57,6 +62,11 @@ def fetch(cfg, prev):
             status = status_from_buttons(buttons)
             if status == "unknown":
                 status = status_from_text(text)
+            seen = [f"{'[disabled] ' if x.get('d') else ''}{x.get('t')} <{(x.get('a') or '').strip()[:50]}> {x.get('zone') or 'main'} {x.get('dist')}px"
+                    for x in buttons if x.get("t") and (BUY.search(x["t"]) or PRE.search(x["t"]) or OUT.search(x["t"]))][:15]
+            i = max(text.find("Pokémon GO Plus"), 0)
+            debug = ("status: " + status + "\npurchase-like buttons: " + ("; ".join(seen) or "none")
+                     + "\npage text near the product:\n" + text[i:i + 700])
             pm = re.search(r"\$\s*(\d{2,3}\.\d{2})", text)
             price = float(pm.group(1)) if pm else None
             if status == "unknown":
@@ -70,4 +80,4 @@ def fetch(cfg, prev):
                       "price": price, "url": w["url"], "note": note})
         if note:
             notes.append(note)
-    return result(items, note="; ".join(notes) or "read after the page finished loading (+3 s)")
+    return result(items, note="; ".join(notes) or "read after the page finished loading (+3 s)", debug=debug)
