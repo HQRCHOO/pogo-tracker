@@ -10,7 +10,9 @@ reports an error and saves what it saw for the Sources tab.
 import json
 import re
 
+from ..render import render, RenderUnavailable
 from ..util import get, html_text, result
+from .gamestop import status_from_buttons, status_from_text
 
 
 def _walk(obj, keys, found):
@@ -80,8 +82,17 @@ def fetch(cfg, prev):
         return result(ok=None, error="not configured")
     items, debug = [], None
     for w in watch:
-        page = get(w["url"], browser=True).text
-        status, price = parse(page)
+        try:  # read the page after its scripts finish (+3 s), like GameStop
+            page, shown, buttons = render(w["url"], extra_wait=3.0)
+            status, price = parse(page)
+            seen = status_from_buttons(buttons)
+            if seen == "unknown":
+                seen = status_from_text(shown)
+            if seen != "unknown":
+                status = seen  # what the page visibly shows wins over embedded data
+        except RenderUnavailable:
+            page = get(w["url"], browser=True).text
+            status, price = parse(page)
         if status is None:
             text = html_text(page)
             debug = (text[:1500] if len(text.strip()) > 200 else "Page text was nearly empty (likely built by JavaScript). Raw page start:\n" + page[:1500])

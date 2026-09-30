@@ -244,7 +244,8 @@ def run(only=None, force=False, dry=False, out=print):
     flips = []
     for r in new.get("stock", []):
         was = (before.get(r.get("id")) or {}).get("status")
-        if was is not None and was != r.get("status") and r.get("status") != "not_configured":
+        if (was is not None and was != r.get("status") and r.get("status") not in ("not_configured", "unknown")
+                and was != "unknown"):
             flips.append({"at": now_iso(), "item": r.get("item"), "retailer": r.get("retailer"), "store": r.get("store"),
                           "area": r.get("area"), "from": was, "to": r.get("status"), "price": r.get("price"), "url": r.get("url")})
     # tracker history (TrackaLacker "Recent Changes") joins the log with its own timestamps
@@ -258,7 +259,11 @@ def run(only=None, force=False, dry=False, out=print):
                 flips.append({"at": h["at"], "item": h.get("item"), "retailer": h["retailer"], "store": None, "area": None,
                               "from": None, "to": h["status"], "price": h.get("price"), "url": h.get("url"),
                               "source": h.get("source"), "tracker_url": h.get("tracker_url")})
-    new["stock_log"] = sorted(flips + list(prev.get("stock_log") or []), key=lambda f: f.get("at") or "", reverse=True)[:500]
+    # one-time cleanup: GameStop "in stock" readings on Sep 30, 2026 came from the page's placeholder
+    # (read before its scripts loaded), so they were never real restocks
+    old_log = [f for f in (prev.get("stock_log") or []) if not (f.get("retailer") == "GameStop" and f.get("to") == "in_stock"
+               and str(f.get("at", "")).startswith("2026-09-30") and not f.get("source"))]
+    new["stock_log"] = sorted(flips + old_log, key=lambda f: f.get("at") or "", reverse=True)[:500]
     lines, new["alerted"] = diff.compute(prev, new, cfg)
     new["alerts_log"] = ([{"at": now_iso(), "line": ln} for ln in lines] + list(prev.get("alerts_log") or []))[:30]
     out(f"diff: {len(lines)} alert line(s)")

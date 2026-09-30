@@ -23,7 +23,7 @@ concurrency:
 jobs:
   poll:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -31,6 +31,9 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
+      - name: Install headless Chromium (reads GameStop / Nintendo after their scripts load)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test_alert) }}
+        run: python -m playwright install --with-deps chromium
       - if: ${{ github.event_name == 'workflow_dispatch' && inputs.test_alert }}
         run: python -m poller.main --test-alert
         env:
