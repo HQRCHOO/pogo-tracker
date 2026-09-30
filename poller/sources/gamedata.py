@@ -79,7 +79,8 @@ def load():
                      "atk": p["baseStats"]["atk"], "def": p["baseStats"]["def"], "hp": p["baseStats"]["hp"],
                      "fast": p.get("fastMoves") or [], "charged": p.get("chargedMoves") or [],
                      "elite": set((p.get("eliteMoves") or []) + (p.get("legacyMoves") or [])),
-                     "shadow": "shadow" in tags, "mega": "mega" in tags})
+                     "shadow": "shadow" in tags, "mega": "mega" in tags,
+                     "legend": bool({"legendary", "mythical", "ultrabeast"} & set(tags))})
     return pve, cpm, names, mons
 
 
@@ -127,6 +128,47 @@ def rank(defs, mons, pve, cpm40, names, top=TOP, only_type=None):
     return out
 
 
+# Tiers by how reachable a Pokémon is (v3.43). Each tier skips Pokémon already shown in a higher tier.
+TIERS = (
+    ("S", 2, lambda m: True, False),                                                     # best possible
+    ("A", 3, lambda m: m["legend"] and not m["mega"] and not m["shadow"], False),        # legendaries from raids
+    ("B", 3, lambda m: not m["legend"] and not m["mega"], False),                        # non-legendary, Shadows OK
+    ("C", 3, lambda m: not m["legend"] and not m["mega"] and not m["shadow"], True),     # budget, no Elite TM moves
+)
+
+
+def tiers(defs, mons, pve, cpm40, names):
+    def ranked(pred, no_elite):
+        rows = []
+        for m in mons:
+            if not pred(m):
+                continue
+            mm = dict(m, fast=[f for f in m["fast"] if f not in m["elite"]],
+                      charged=[c for c in m["charged"] if c not in m["elite"]]) if no_elite else m
+            b = best_moveset(mm, defs, pve, cpm40)
+            if b:
+                rows.append((b["score"], m, b))
+        return sorted(rows, key=lambda r: -r[0])
+    best = ranked(lambda m: True, False)
+    if not best:
+        return {}
+    top, used, out = best[0][0], set(), {}
+    for tier, n, pred, no_elite in TIERS:
+        picks = []
+        for score, m, b in (best if tier == "S" else ranked(pred, no_elite)):
+            if m["name"] in used:
+                continue
+            used.add(m["name"])
+            fast, charged = names.get(b["fast"], b["fast"]), names.get(b["charged"], b["charged"])
+            picks.append({"name": m["name"], "fast": fast, "charged": charged,
+                          "elite": [x for x, mid in ((fast, b["fast"]), (charged, b["charged"])) if mid in m["elite"]],
+                          "pct": round((score / top) ** 0.25 * 100)})
+            if len(picks) >= n:
+                break
+        out[tier] = picks
+    return out
+
+
 def fetch(cfg, prev):
     pve, cpm, names, mons = load()
     cpm40 = cpm[39] if len(cpm) > 39 else 0.7903
@@ -136,7 +178,7 @@ def fetch(cfg, prev):
         img = str(r.get("image") or "").rsplit("/", 1)[-1] or r.get("name")
         key = ("shadow:" if str(r.get("name", "")).lower().startswith("shadow ") else "") + img
         if defs:
-            counters[key] = rank(defs, mons, pve, cpm40, names)
+            counters[key] = tiers(defs, mons, pve, cpm40, names)
     type_top = {}
     for t in TCHART:
         neutral = next(d for d in TCHART if eff(t, [d]) == 1.0)
