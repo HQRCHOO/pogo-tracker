@@ -10,6 +10,7 @@ reports an error and saves what it saw for the Sources tab.
 import json
 import re
 
+from ..confirm import confirm
 from ..render import render, RenderUnavailable
 from ..util import get, html_text, result
 from .gamestop import status_from_buttons, status_from_text
@@ -82,17 +83,26 @@ def fetch(cfg, prev):
         return result(ok=None, error="not configured")
     items, debug = [], None
     for w in watch:
-        try:  # read the page after its scripts finish (+3 s), like GameStop
+        def read():
             page, shown, buttons = render(w["url"], extra_wait=3.0)
-            status, price = parse(page)
+            st, pr = parse(page)
             seen = status_from_buttons(buttons)
             if seen == "unknown":
                 seen = status_from_text(shown)
-            if seen != "unknown":
-                status = seen  # what the page visibly shows wins over embedded data
+            return (seen if seen != "unknown" else (st or "unknown")), {"page": page, "price": pr}
+
+        try:  # read the page after its scripts finish (+3 s); a live reading is re-checked 20 s later
+            status, extra, check = confirm(read)
+            page, price = extra["page"], extra["price"]
         except RenderUnavailable:
             page = get(w["url"], browser=True).text
             status, price = parse(page)
+        except Exception as e:  # blocked or timed out: report unknown, never keep an old status
+            items.append({"id": "nin-" + (re.search(r"-(\d+)/?$", w["url"].rstrip("/")) or re.search(r"(\d+)", "0")).group(1),
+                          "item": w.get("item") or "Pokémon GO Plus +", "retailer": "Nintendo Store", "area": None,
+                          "store": None, "status": "unknown", "price": None, "url": w["url"],
+                          "note": f"page didn't load ({type(e).__name__}: {str(e)[:60]})"})
+            continue
         if status is None:
             text = html_text(page)
             debug = (text[:1500] if len(text.strip()) > 200 else "Page text was nearly empty (likely built by JavaScript). Raw page start:\n" + page[:1500])

@@ -31,6 +31,10 @@ stock:
     item: Pokémon GO Plus +
     retailer: target
     tcin: "88714054"               # target.com/p/pokemon-go-plus/-/A-88714054
+  - name: GO Plus+ (Walmart)          # counts only when sold by Walmart, not marketplace sellers
+    item: Pokémon GO Plus +
+    retailer: walmart
+    url: https://www.walmart.com/ip/Nintendo-Pokemon-GO-Plus/1178570516
   - name: GO Plus+ (Nintendo Store)
     item: Pokémon GO Plus +
     retailer: nintendo
@@ -41,7 +45,7 @@ stock:
     url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/451400.html   # SKU 451400
 
 target:
-  redsky_url: ""                   # paste the current template from retail-drop-monitor; uses {tcin} {store_id} {zip} {key}
+  redsky_url: "https://redsky.target.com/redsky_aggregations/v1/web/product_fulfillment_v1?key={key}&is_bot=false&tcin={tcin}&store_id={store_id}&zip={zip}&state=CA&required_store_id={store_id}&has_required_store_id=true&scheduled_delivery_store_id={store_id}"   # what target.com loads; key found on the page if TARGET_REDSKY_KEY isn't set
   stores:                          # one Target store per area (IDs from target.com/sl/<city>/<id>)
     - {area: SGV,         store_id: "184",  name: "Alhambra"}
     - {area: SGV,         store_id: "1411", name: "Rosemead"}           # store number from 3 listings; confirm
@@ -89,6 +93,11 @@ bestbuy:
     - {area: SGV,         zip: "91801", radius_miles: 6}   # Target #184 Alhambra
     - {area: SGV,         zip: "91770", radius_miles: 6}   # Target #1411 Rosemead
 
+notify:                            # Slack pings on stock changes (SLACK_WEBHOOK secret)
+  slack: true
+  mention_on_first_hand: "<!here>"  # prefix for confirmed first-hand in-stock / preorder pings; "" for none
+  sold_out_messages: true           # a quiet message when something goes back to sold out
+
 trackers:                          # public tracker pages (secondhand status; no keys needed)
   - item: Pokémon GO Plus +
     hotstock: https://www.hotstock.io/us/p/pokemon-go-plus
@@ -104,7 +113,9 @@ trackers:                          # public tracker pages (secondhand status; no
 
 cadence_minutes:                   # estimates; tune after week one
   trackers: 30
-  nintendo: 30
+  nintendo: 15
+  bestbuy_button: 15
+  walmart: 15
   stock: 15
   pogo_events: 30
   discord: 30

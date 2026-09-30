@@ -38,6 +38,7 @@ jobs:
         run: python -m poller.main --test-alert
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       - if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test_alert) }}
         run: python -m poller.main
         env:
@@ -49,6 +50,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           POKEMONTCG_KEY: ${{ secrets.POKEMONTCG_KEY }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       - name: Commit calendar.ics if it changed
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.test_alert) }}
         run: |

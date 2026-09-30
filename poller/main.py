@@ -14,7 +14,7 @@ import sys
 
 import yaml
 
-from . import alerts, diff, drive, ics  # ics.py writes calendar.ics (not named calendar.py, so it can never shadow Python's built-in calendar module)
+from . import alerts, diff, drive, ics, notify  # ics.py writes calendar.ics (not named calendar.py, so it can never shadow Python's built-in calendar module)
 from .util import now_iso, now_utc, parse_iso, result
 
 HEARTBEAT_HOURS = 2  # rewrite dashboard.json at least this often even if nothing changed
@@ -50,8 +50,11 @@ SOURCES = {
     "discord": ("discord", "discord_posts"),
     "trackers": ("trackers", "stock"),
     "nintendo": ("nintendo", "stock"),
+    "bestbuy_button": ("bestbuy_button", "stock"),
+    "walmart": ("walmart", "stock"),
 }
-STOCK_SOURCES = ("bestbuy", "target", "gamestop", "trackers", "nintendo")
+STOCK_SOURCES = ("bestbuy", "target", "gamestop", "trackers", "nintendo", "bestbuy_button", "walmart")
+FIRST_HAND = ("bestbuy", "target", "gamestop", "nintendo", "bestbuy_button", "walmart")
 LINK_RULES = {"pogo_events": "https://leekduck.com/events/{id}/",
               "gundam_releases": "https://www.gundam-gcg.com/en/products/{id}.html"}
 
@@ -103,7 +106,8 @@ def merge_manual(scraped, manual):
     return list(by_id.values())
 
 
-RETAILER = {"bestbuy": "Best Buy", "target": "Target", "gamestop": "GameStop", "nintendo": "Nintendo Store"}
+RETAILER = {"bestbuy": "Best Buy", "target": "Target", "gamestop": "GameStop", "nintendo": "Nintendo Store",
+            "bestbuy_button": "Best Buy", "walmart": "Walmart"}
 
 
 def placeholders(cfg, results):
@@ -229,8 +233,8 @@ def run(only=None, force=False, dry=False, out=print):
                  or (r.get("item"), r.get("retailer")) not in have]
         # a first-hand check that worked this run beats the tracker's secondhand row
         firsthand = {(r.get("item"), r.get("retailer")) for r in stock
-                     if r.get("src") in ("bestbuy", "target", "gamestop") and (results.get(r.get("src")) or {}).get("ok")
-                     and r.get("status") != "not_configured"}
+                     if r.get("src") in FIRST_HAND and (results.get(r.get("src")) or {}).get("ok")
+                     and r.get("status") not in ("not_configured", "unknown") and not r.get("area")}
         new["stock"] = [r for r in stock if r.get("src") != "trackers"
                         or (r.get("item"), (r.get("retailer") or "").split(" (")[0]) not in firsthand]
 
@@ -265,7 +269,12 @@ def run(only=None, force=False, dry=False, out=print):
                and str(f.get("at", "")).startswith("2026-09-30")
                and ({f.get("to"), f.get("from")} & {"in_stock", "preorder_live"}))]
     new["stock_log"] = sorted(flips + old_log, key=lambda f: f.get("at") or "", reverse=True)[:500]
+    # Slack pings on stock changes (first-hand readings were double-checked by their sources)
+    nt = notify.run(prev.get("stock", []), new.get("stock", []), cfg, dry=dry)
+    out(f"notify: {nt['live']} in-stock change(s), {nt['gone']} back to sold out, slack {'sent' if nt['sent'] else 'not sent'}")
     lines, new["alerted"] = diff.compute(prev, new, cfg)
+    if nt["text"]:
+        lines = [ln for ln in lines if not ln.startswith("🟢")] + [nt["text"].replace("<!here>\n", "")]
     new["alerts_log"] = ([{"at": now_iso(), "line": ln} for ln in lines] + list(prev.get("alerts_log") or []))[:30]
     out(f"diff: {len(lines)} alert line(s)")
     for line in lines:
@@ -296,9 +305,11 @@ def main(argv=None):
     ap.add_argument("--only", nargs="*")
     a = ap.parse_args(argv)
     if a.test_alert:
-        n = alerts.discord(["✅ TrackMaster test alert: the Discord webhook works."])
-        print(f"discord: {n} test message(s) sent" if n else "discord: DISCORD_WEBHOOK not set")
-        return 0 if n else 1
+        s = alerts.slack("✅ TrackMaster test ping: stock alerts will post here.")
+        print("slack: test ping sent" if s else "slack: SLACK_WEBHOOK not set")
+        d = alerts.discord(["✅ TrackMaster test alert: the Discord webhook works."])
+        print(f"discord: {d} test message(s) sent" if d else "discord: DISCORD_WEBHOOK not set")
+        return 0 if (s or d) else 1
     run(only=a.only, force=a.force or os.environ.get("FORCE") == "true", dry=a.dry_run)
     return 0
 

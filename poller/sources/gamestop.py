@@ -8,6 +8,9 @@ If the browser can't run, the status is "unknown" — never a guessed "in stock"
 """
 import re
 
+import time
+
+from ..confirm import confirm
 from ..render import render, RenderUnavailable
 from ..util import result
 
@@ -57,20 +60,36 @@ def fetch(cfg, prev):
     items, notes, debug = [], [], None
     for w in watch:
         status, price, note = "unknown", None, None
+        def read_once():
+            for attempt in (1, 2):  # one retry when GameStop blocks the browser
+                try:
+                    return render(w["url"], extra_wait=3.0)
+                except RuntimeError as e:
+                    if attempt == 2 or "403" not in str(e):
+                        raise
+                    time.sleep(10)
+
+        def read():
+            html, text, buttons = read_once()
+            st = status_from_buttons(buttons)
+            if st == "unknown":
+                st = status_from_text(text)
+            return st, {"text": text, "buttons": buttons}
+
         try:
-            html, text, buttons = render(w["url"], extra_wait=3.0)
-            status = status_from_buttons(buttons)
+            status, extra, check = confirm(read)
+            text, buttons = extra["text"], extra["buttons"]
+            pm = re.search(r"\$\s*(\d{2,3}\.\d{2})", text)
+            price = float(pm.group(1)) if pm else None
             if status == "unknown":
-                status = status_from_text(text)
+                note = "page loaded but showed no availability wording"
+            elif check:
+                note = check
             seen = [f"{'[disabled] ' if x.get('d') else ''}{x.get('t')} <{(x.get('a') or '').strip()[:50]}> {x.get('zone') or 'main'} {x.get('dist')}px"
                     for x in buttons if x.get("t") and (BUY.search(x["t"]) or PRE.search(x["t"]) or OUT.search(x["t"]))][:15]
             i = max(text.find("Pokémon GO Plus"), 0)
             debug = ("status: " + status + "\npurchase-like buttons: " + ("; ".join(seen) or "none")
                      + "\npage text near the product:\n" + text[i:i + 700])
-            pm = re.search(r"\$\s*(\d{2,3}\.\d{2})", text)
-            price = float(pm.group(1)) if pm else None
-            if status == "unknown":
-                note = "page loaded but showed no availability wording"
         except RenderUnavailable:
             note = "browser not available; status not checked"
         except Exception as e:  # blocked or timed out: say so, and never keep an old "in stock"

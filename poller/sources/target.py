@@ -6,8 +6,16 @@ and save the key as the TARGET_REDSKY_KEY secret. Until then this reports
 "not configured".
 """
 import os
+import re
 
 from ..util import get, result
+
+
+def discover_key(tcin):
+    """The RedSky key target.com's own pages use (public, embedded in the page)."""
+    html = get(f"https://www.target.com/p/-/A-{tcin}", browser=True).text
+    m = re.search(r'apiKey\\?"\s*:\s*\\?"([0-9a-f]{40})', html) or re.search(r"key=([0-9a-f]{40})", html)
+    return m.group(1) if m else ""
 
 LIVE = {"IN_STOCK": "in_stock", "LIMITED_STOCK": "low", "PRE_ORDER_SELLABLE": "preorder_live",
         "OUT_OF_STOCK": "unavailable", "UNAVAILABLE": "unavailable"}
@@ -39,6 +47,10 @@ def fetch(cfg, prev):
     watch = [s for s in cfg.get("stock", []) if s.get("retailer") == "target" and str(s.get("tcin", "")).isdigit()]
     if not tpl or not watch:
         return result(ok=None, error="not configured")
+    if not key:
+        key = discover_key(watch[0]["tcin"])
+        if not key:
+            return result(ok=False, error="couldn't find Target's page key")
     stores = (cfg.get("target") or {}).get("stores", [])  # [{area, store_id}]
     items, cache = [], {}
     for w in watch:
