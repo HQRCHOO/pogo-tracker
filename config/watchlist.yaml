@@ -22,27 +22,27 @@ pogo:
   event_types: [season, event, community-day, research, go-pass, pokemon-go-tour, raid-day, wild-area, max-battles, elite-raids, raid-weekend, go-rocket-takeover]
   ending_soon_hours: 48
 
-stock:
-  - name: GO Plus+ (Best Buy)
-    item: Pokémon GO Plus +
-    retailer: bestbuy
-    sku: "6537404"                 # Pokémon GO Plus + (model PMCAWNSAA)
-  - name: GO Plus+ (Target)
-    item: Pokémon GO Plus +
-    retailer: target
-    tcin: "88714054"               # target.com/p/pokemon-go-plus/-/A-88714054
-  - name: GO Plus+ (Walmart)          # counts only when sold by Walmart, not marketplace sellers
-    item: Pokémon GO Plus +
-    retailer: walmart
-    url: https://www.walmart.com/ip/Nintendo-Pokemon-GO-Plus/1178570516
+stock:                             # v3.60: GO Plus+ watched at the Nintendo Store only; uncomment a store to turn it back on
+  # - name: GO Plus+ (Best Buy)
+  #   item: Pokémon GO Plus +
+  #   retailer: bestbuy
+  #   sku: "6537404"                 # Pokémon GO Plus + (model PMCAWNSAA)
+  # - name: GO Plus+ (Target)
+  #   item: Pokémon GO Plus +
+  #   retailer: target
+  #   tcin: "88714054"               # target.com/p/pokemon-go-plus/-/A-88714054
+  # - name: GO Plus+ (Walmart)          # counts only when sold by Walmart, not marketplace sellers
+  #   item: Pokémon GO Plus +
+  #   retailer: walmart
+  #   url: https://www.walmart.com/ip/Nintendo-Pokemon-GO-Plus/1178570516
   - name: GO Plus+ (Nintendo Store)
     item: Pokémon GO Plus +
     retailer: nintendo
     url: https://www.nintendo.com/us/store/products/pokemon-go-plus-plus-112387/
-  - name: GO Plus+ (GameStop)       # sometimes answers 403; it caught the Sep 30 in-stock at 2:37 AM PT
-    item: Pokémon GO Plus +
-    retailer: gamestop
-    url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/451400.html   # SKU 451400
+  # - name: GO Plus+ (GameStop)       # sometimes answers 403; it caught the Sep 30 in-stock at 2:37 AM PT
+  #   item: Pokémon GO Plus +
+  #   retailer: gamestop
+  #   url: https://www.gamestop.com/gaming-accessories/accessory-kits/nintendo-switch/products/pokemon-go-plus-plus/451400.html   # SKU 451400
 
 target:
   redsky_url: ""                   # off for now: Target refuses GitHub's servers (HTTP 435). To turn on, paste:
@@ -109,8 +109,8 @@ notify:                            # Slack pings on stock changes (SLACK_WEBHOOK
 
 trackers:                          # public tracker pages (secondhand status; no keys needed)
   - item: Pokémon GO Plus +
-    hotstock: https://www.hotstock.io/us/p/pokemon-go-plus
-    trackalacker: https://www.trackalacker.com/products/showcase/pokemon-go-plus
+    # hotstock: https://www.hotstock.io/us/p/pokemon-go-plus          # off since v3.60 (Nintendo only)
+    # trackalacker: https://www.trackalacker.com/products/showcase/pokemon-go-plus   # off since v3.60
     match:                         # keep only rows whose retailer link contains this text
       Best Buy: "6537404"
       Target: "88714054"

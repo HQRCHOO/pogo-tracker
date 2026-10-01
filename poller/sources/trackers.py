@@ -177,6 +177,8 @@ def listing_hints(page):
 
 
 def fetch(cfg, prev):
+    if not any((t or {}).get("hotstock") or (t or {}).get("trackalacker") for t in (cfg.get("trackers") or [])):
+        return result(ok=None, error="not configured")   # v3.60: GO Plus+ watched at the Nintendo Store only
     watch = cfg.get("trackers") or []
     if not watch:
         return result(ok=None, error="not configured")
