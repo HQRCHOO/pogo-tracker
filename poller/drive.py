@@ -4,6 +4,24 @@ import json
 import os
 
 _drive = None
+RETRY_WAITS = (5, 15, 30)   # seconds between attempts: Google's 5xx pages say "try again in 30 seconds"
+
+
+def _retry(fn, what):
+    """Run fn(); on a temporary Google / network error, wait and try again (4 attempts in all)."""
+    import time
+    for i, wait in enumerate(RETRY_WAITS + (None,)):
+        try:
+            return fn()
+        except Exception as e:
+            status = getattr(getattr(e, "resp", None), "status", None)
+            temporary = (status is not None and int(status) in (429, 500, 502, 503, 504)) or \
+                type(e).__name__ in ("TimeoutError", "ConnectionError", "ConnectionResetError", "socket.timeout",
+                                     "timeout", "ServerNotFoundError", "SSLError", "RemoteDisconnected", "BrokenPipeError")
+            if not temporary or wait is None:
+                raise
+            print(f"drive: {what} failed ({status or type(e).__name__}); retrying in {wait}s ({i + 1}/{len(RETRY_WAITS)})")
+            time.sleep(wait)
 
 
 def _local():
@@ -29,7 +47,7 @@ def read_dashboard():
                 return json.load(f)
         except FileNotFoundError:
             return {}
-    raw = _svc().files().get_media(fileId=os.environ["GDRIVE_FILE_ID"]).execute()
+    raw = _retry(lambda: _svc().files().get_media(fileId=os.environ["GDRIVE_FILE_ID"]).execute(), "read")
     return json.loads(raw or b"{}")
 
 
@@ -40,6 +58,8 @@ def write_dashboard(data):
             f.write(body)
         return len(body)
     from googleapiclient.http import MediaIoBaseUpload
-    media = MediaIoBaseUpload(io.BytesIO(body), mimetype="application/json", resumable=False)
-    _svc().files().update(fileId=os.environ["GDRIVE_FILE_ID"], media_body=media).execute()
+    def upload():
+        media = MediaIoBaseUpload(io.BytesIO(body), mimetype="application/json", resumable=False)
+        return _svc().files().update(fileId=os.environ["GDRIVE_FILE_ID"], media_body=media).execute()
+    _retry(upload, "save")
     return len(body)

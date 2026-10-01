@@ -18,7 +18,7 @@ from . import alerts, diff, drive, ics, icons, notify  # ics.py writes calendar.
 from .util import now_iso, now_utc, parse_iso, result
 
 HEARTBEAT_HOURS = 2  # rewrite dashboard.json at least this often even if nothing changed
-VOLATILE = ("generated_at", "last_run", "last_success", "checked_at", "fails")  # timestamps ignored when deciding "changed"
+VOLATILE = ("generated_at", "last_run", "last_success", "checked_at", "fails", "runs_24h")  # timestamps ignored when deciding "changed"
 
 
 def signature(d):
@@ -127,6 +127,30 @@ def placeholders(cfg, results):
                          "status": "not_configured", "price": None, "url": None,
                          "note": f"{res.get('error')}: add IDs/keys (guide §12)", "src": r})
     return rows
+
+
+def runs_24h(out=print):
+    """How often this workflow actually ran in the last 24 h (GitHub drops many scheduled triggers)."""
+    import datetime as _dt
+    import requests
+    tok, repo = os.environ.get("GITHUB_TOKEN"), os.environ.get("GITHUB_REPOSITORY")
+    if not tok or not repo:
+        return None
+    since = (now_utc() - _dt.timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        r = requests.get(f"https://api.github.com/repos/{repo}/actions/workflows/poll.yml/runs",
+                         params={"created": f">={since}", "per_page": 100},
+                         headers={"Authorization": f"Bearer {tok}", "Accept": "application/vnd.github+json"}, timeout=15)
+        r.raise_for_status()
+        rs = r.json().get("workflow_runs") or []
+    except Exception as e:
+        out(f"runs: couldn't read run history ({type(e).__name__})")
+        return None
+    res = {"total": len(rs), "scheduled": sum(1 for x in rs if x.get("event") == "schedule"),
+           "manual": sum(1 for x in rs if x.get("event") != "schedule"),
+           "failed": sum(1 for x in rs if x.get("conclusion") == "failure"), "expected": 96, "as_of": now_iso()}
+    out(f"runs: {res['total']} in 24 h ({res['scheduled']} scheduled, {res['manual']} manual, {res['failed']} failed) of 96 expected")
+    return res
 
 
 def run(only=None, force=False, dry=False, out=print):
@@ -296,6 +320,7 @@ def run(only=None, force=False, dry=False, out=print):
     out(f"diff: {len(lines)} alert line(s)")
     for line in lines:
         out("  " + line)
+    new["runs_24h"] = runs_24h(out) or prev.get("runs_24h")
     if dry:
         out("dry run: nothing written, nothing sent")
         return new, lines
