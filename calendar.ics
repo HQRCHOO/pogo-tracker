@@ -5,14 +5,6 @@ CALSCALE:GREGORIAN
 X-WR-CALNAME:TRX
 X-WR-CALDESC:Pokémon GO events and card releases
 BEGIN:VEVENT
-UID:pogo-lego-pokemon-go-2026@trackmaster
-DTSTART:20260803T100000
-DTEND:20260930T235900
-SUMMARY:LEGO Stores and Pokémon GO
-DESCRIPTION:https://leekduck.com/events/lego-pokemon-go-2026/
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
 UID:pogo-patterns-of-the-wild-2026@trackmaster
 DTSTART:20261002T100000
 DTEND:20261002T200000
