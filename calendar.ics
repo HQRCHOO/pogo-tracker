@@ -1,8 +1,8 @@
 BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//TrackMaster//poller//EN
+PRODID:-//TRX//poller//EN
 CALSCALE:GREGORIAN
-X-WR-CALNAME:TrackMaster
+X-WR-CALNAME:TRX
 X-WR-CALDESC:Pokémon GO events and card releases
 BEGIN:VEVENT
 UID:pogo-lego-pokemon-go-2026@trackmaster
