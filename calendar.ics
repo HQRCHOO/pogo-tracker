@@ -94,6 +94,14 @@ DESCRIPTION:https://leekduck.com/events/max-battle-day-october-24-2026/
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
+UID:pogo-minior-showers-orionids-2026@trackmaster
+DTSTART:20261019T170000
+DTEND:20261024T235900
+SUMMARY:Minior Showers: Orionids 2026
+DESCRIPTION:https://leekduck.com/events/minior-showers-orionids-2026/
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
 UID:pogo-super-mega-raid-day-october-2026@trackmaster
 DTSTART:20261031T140000
 DTEND:20261031T170000
@@ -149,6 +157,14 @@ DTSTART:20261114T100000
 DTEND:20261115T180000
 SUMMARY:Pokémon GO Wild Area 2026: Global
 DESCRIPTION:https://leekduck.com/events/pokemon-go-wild-area-2026-global/
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:pogo-minior-showers-leonids-2026@trackmaster
+DTSTART:20261114T170000
+DTEND:20261119T235900
+SUMMARY:Minior Showers: Leonids 2026
+DESCRIPTION:https://leekduck.com/events/minior-showers-leonids-2026/
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
