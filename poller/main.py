@@ -1,4 +1,4 @@
-"""TrackMaster poller: fetch due sources, merge into dashboard.json, alert on changes.
+"""TRX poller: fetch due sources, merge into dashboard.json, alert on changes.
 
 Usage:
   python -m poller.main               # normal scheduled run
@@ -322,9 +322,9 @@ def main(argv=None):
     ap.add_argument("--only", nargs="*")
     a = ap.parse_args(argv)
     if a.test_alert:
-        s = alerts.slack("✅ TrackMaster test ping: stock alerts will post here.")
+        s = alerts.slack("✅ TRX test ping: stock alerts will post here.")
         print("slack: test ping sent" if s else "slack: SLACK_WEBHOOK not set")
-        d = alerts.discord(["✅ TrackMaster test alert: the Discord webhook works."])
+        d = alerts.discord(["✅ TRX test alert: the Discord webhook works."])
         print(f"discord: {d} test message(s) sent" if d else "discord: DISCORD_WEBHOOK not set")
         return 0 if (s or d) else 1
     run(only=a.only, force=a.force or os.environ.get("FORCE") == "true", dry=a.dry_run)

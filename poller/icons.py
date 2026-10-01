@@ -174,7 +174,7 @@ def build(new, prev, out=print):
     got, failed, t0, shuffle = 0, [], time.time(), None
     if missing:
         s = requests.Session()
-        s.headers["User-Agent"] = "TrackMaster poller (personal dashboard)"
+        s.headers["User-Agent"] = "TRX poller (personal dashboard)"
         try:
             shuffle = Shuffle(s)
         except Exception as e:

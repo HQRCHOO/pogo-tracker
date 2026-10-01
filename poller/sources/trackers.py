@@ -25,7 +25,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from ..util import get, html_text, result
 
-UA_NOTE = "TrackMaster personal dashboard poller (low frequency)"
+UA_NOTE = "TRX personal dashboard poller (low frequency)"
 SHOP = {"bestbuy": "Best Buy", "target": "Target", "walmart": "Walmart", "gamestop": "GameStop", "amazon": "Amazon",
         "ebay": "eBay", "samsclub": "Sam's Club", "costco": "Costco", "pokemoncenter": "Pokémon Center",
         "antonline": "Antonline", "lenovo": "Lenovo", "newegg": "Newegg"}

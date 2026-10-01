@@ -39,8 +39,8 @@ def build(d, cfg):
     cal = cfg.get("calendar") or {}
     types = set(cal.get("event_types") or [])
     rules = d.get("link_rules") or {}
-    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//TrackMaster//poller//EN", "CALSCALE:GREGORIAN",
-             "X-WR-CALNAME:TrackMaster", "X-WR-CALDESC:Pokémon GO events and card releases"]
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//TRX//poller//EN", "CALSCALE:GREGORIAN",
+             "X-WR-CALNAME:TRX", "X-WR-CALDESC:Pokémon GO events and card releases"]
     for e in d.get("pogo_events", []):
         if types and e.get("type") not in types or not e.get("start") or not e.get("end"):
             continue

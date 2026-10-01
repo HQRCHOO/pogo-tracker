@@ -71,7 +71,7 @@ def build(d, cfg):
         prefix = short(when) + "  "
         return prefix + cut(x[0].get("name"), W - len(prefix))
 
-    parts = [f"*⚡ TrackMaster · {now:%a %b %-d}*\n{head}",
+    parts = [f"*⚡ TRX · {now:%a %b %-d}*\n{head}",
              block("Ending this week", [erow(x, x[2]) for x in ending[:8]]),
              block("Starting this week", [erow(x, x[1]) for x in starting[:8]]),
              block("Restock watch", [cut(f"{cut(short_item(s.get('item')), 8):<8} {cut(s.get('retailer'), 9):<9} "
@@ -80,7 +80,7 @@ def build(d, cfg):
                                      for s in stock if not s.get("area")][:6]),
              block("Card releases", [cut(f"{('TODAY' if dd == now.date() else f'{dd:%b} {dd.day}'):<7} {lab} {r.get('name')}", W)
                                      for dd, lab, r in rel[:8]])]
-    links = [f"<{cfg.get('dashboard_url')}|Open TrackMaster>"] if cfg.get("dashboard_url") else []
+    links = [f"<{cfg.get('dashboard_url')}|Open TRX>"] if cfg.get("dashboard_url") else []
     for s in live:
         tag = f"<{s['url']}|{s.get('retailer')}>" if s.get("url") else None
         if tag and tag not in links and len(links) < 4:
@@ -106,7 +106,7 @@ def main():
     text, gen = build(d, cfg)
     stale_h = float((cfg.get("digest") or {}).get("stale_hours", 6))
     if gen and (now_utc() - gen).total_seconds() > stale_h * 3600:
-        text = f"⚠️ TrackMaster: the poller hasn't updated since {short(wall(d.get('generated_at'))).strip()} PT. Check the pogo-tracker Actions tab."
+        text = f"⚠️ TRX: the poller hasn't updated since {short(wall(d.get('generated_at'))).strip()} PT. Check the pogo-tracker Actions tab."
     print(text)
     n = alerts.slack(text)
     print(f"slack: {n} message(s) sent" if n else "slack: SLACK_WEBHOOK not set (printed only)")

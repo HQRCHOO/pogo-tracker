@@ -1,1 +1,1 @@
-"""TrackMaster poller package."""
+"""TRX poller package."""
