@@ -1,4 +1,4 @@
-# pogo-tracker
+# trx
 
 The poller behind the TRX dashboard. It checks Pokémon GO events, raid
 bosses, GO Plus+ stock and card-game releases on a schedule, writes one

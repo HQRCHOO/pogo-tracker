@@ -252,7 +252,7 @@ def run(only=None, force=False, dry=False, out=print):
     new.update(schema=2, generated_at=now_iso(), generated_by="poller",
                location=cfg.get("location") or new.get("location"), link_rules=LINK_RULES)
     gh = str(cfg.get("github_user") or "")
-    new["calendar_url"] = (f"https://raw.githubusercontent.com/{gh}/pogo-tracker/main/calendar.ics"
+    new["calendar_url"] = (f"https://raw.githubusercontent.com/{gh}/trx/main/calendar.ics"
                            if gh and not gh.startswith("<") else None)
     # stock_log: every status flip, for the Log tab and restock predictions (last 500)
     before = {r.get("id"): r for r in prev.get("stock", [])}

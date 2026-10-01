@@ -106,7 +106,7 @@ def main():
     text, gen = build(d, cfg)
     stale_h = float((cfg.get("digest") or {}).get("stale_hours", 6))
     if gen and (now_utc() - gen).total_seconds() > stale_h * 3600:
-        text = f"⚠️ TRX: the poller hasn't updated since {short(wall(d.get('generated_at'))).strip()} PT. Check the pogo-tracker Actions tab."
+        text = f"⚠️ TRX: the poller hasn't updated since {short(wall(d.get('generated_at'))).strip()} PT. Check the trx Actions tab."
     print(text)
     n = alerts.slack(text)
     print(f"slack: {n} message(s) sent" if n else "slack: SLACK_WEBHOOK not set (printed only)")
