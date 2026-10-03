@@ -5,14 +5,6 @@ CALSCALE:GREGORIAN
 X-WR-CALNAME:TRX
 X-WR-CALDESC:Pokémon GO events and card releases
 BEGIN:VEVENT
-UID:pogo-patterns-of-the-wild-2026@trackmaster
-DTSTART:20261002T100000
-DTEND:20261002T200000
-SUMMARY:Patterns of the Wild
-DESCRIPTION:https://leekduck.com/events/patterns-of-the-wild-2026/
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
 UID:pogo-gigantamax-cinderace-max-battle-day-2026@trackmaster
 DTSTART:20261003T140000
 DTEND:20261003T170000
